@@ -189,6 +189,28 @@ def nearest(f, target):
     return int(np.argmin(np.abs(f - target)))
 
 
+def crossing_3db(f, shape):
+    """First frequency where shape falls to 1/2, from a cubic in dB against log f.
+
+    The first grid point below -3 dB alone is up to one grid step (12 % at 20
+    points per decade) too high, and a straight line between the two
+    neighbours lands low on the bending roll-off.
+    """
+    below = np.where(shape < 0.5)[0]
+    if not below.size or below[0] == 0:
+        return float('nan')
+    i = below[0]
+    x, y = np.log10(f), 10.0 * np.log10(shape)
+    lo, hi = max(i - 3, 0), min(i + 3, len(f))
+    c = np.polyfit(x[lo:hi], y[lo:hi], min(3, hi - lo - 1))
+    c[-1] -= 10.0 * np.log10(0.5)
+    r = np.roots(c)
+    r = r[(np.abs(r.imag) < 1e-9) & (r.real >= x[i - 1]) & (r.real <= x[i])].real
+    if r.size:
+        return float(10 ** r.min())
+    return float(10 ** np.interp(np.log10(0.5), np.log10(shape[[i, i - 1]]), x[[i, i - 1]]))
+
+
 with open(NETLIST) as f:
     netlist = f.read()
 freq_lo = parse_var(netlist, 'freq_lo')
@@ -412,8 +434,9 @@ print(f'hbnoise gain vs hbac  : within {gain_check_db:.4f} dB over the IF sweep,
       f'{gain_check_lo_db:.4f} dB over the LO sweep')
 print(f'IF output at {dbm(P_RF_REF):.1f} dBm RF: {v_if_ref[0]*1e6:.1f} uV at low IF, '
       f'{loginterp(2e9, f_n, v_if_ref)*1e6:.1f} uV at 2 GHz')
-print(f'Video bandwidth       : {f_n[np.where(shape_n < 0.5)[0][0]]/1e9:.2f} GHz (-3 dB of the conversion)'
-      if np.any(shape_n < 0.5) else 'Video bandwidth       : above the swept range')
+f_video = crossing_3db(f_n, shape_n)
+print(f'Video bandwidth       : {f_video/1e9:.2f} GHz (-3 dB of the conversion, interpolated)'
+      if np.isfinite(f_video) else 'Video bandwidth       : above the swept range')
 print(f'Sideband imbalance    : g_L/g_U = {imb_db[j_if]:+.2f} dB at {F_IF_LO/1e9:.0f} GHz')
 for (lo, hi), (v_rms, m, m_np) in mds.items():
     print(f'Video band {lo:.0e} .. {hi:.0e} Hz : {v_rms*1e6:7.1f} uV RMS, '
