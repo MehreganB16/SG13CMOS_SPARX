@@ -362,7 +362,7 @@ with $g_\mathrm{U}$ the conversion gain of Section 7.1 (column `g_usb` of `sparx
 
 ### 6.2 Video bandwidth
 
-The video bandwidth is the frequency where $\lvert H \rvert^2$ falls to 1/2. The script prints the first grid point below that level. Interpolated between the grid points, with a cubic fit of $\lvert H \rvert^2$ in dB against $\log f$ over the six points around the crossing, the bandwidths are lower:
+The video bandwidth is the frequency where $\lvert H \rvert^2$ falls to 1/2. The script finds it with a cubic fit of $\lvert H \rvert^2$ in dB against $\log f$ through the six grid points around the crossing. The first grid point below -3 dB alone lies up to one grid step, 12 %, higher, and a straight line between the two neighbouring points lands 0.7 to 2.4 MHz low on the bending roll-off:
 
 | version | first grid point below -3 dB | interpolated -3 dB frequency | peak of $\lvert H \rvert^2$ |
 |---|---|---|---|
@@ -370,7 +370,7 @@ The video bandwidth is the frequency where $\lvert H \rvert^2$ falls to 1/2. The
 | post-layout | 1.120 GHz | 1.076 GHz | +0.51 dB at 316 MHz |
 | $m = 16$ | 1.774 GHz | 1.604 GHz | +6.09 dB at 223 MHz |
 
-The paper quotes the grid values. "The 1.3 GHz video bandwidth" is 1.256 GHz rounded, and the interpolated value is 1.24 GHz. "PEX reduces the video bandwidth by 11 %" is the ratio of the two grid points, 1.120 / 1.256 = $10^{-0.05}$, exactly one grid step. Interpolated, the reduction is 13.4 % (13.6 % with log-log interpolation). For $m = 16$ the junction capacitance at the TIA input causes 6 dB of peaking, which a bandwidth relative to 1 kHz hides.
+The paper quotes the interpolated values: "the 1.2 GHz video bandwidth" is 1.243 GHz, and "PEX reduces the video bandwidth by 13 %" is 13.4 %. The grid points alone would give 1.26 GHz and 11 %, since 1.120 / 1.256 = $10^{-0.05}$ is exactly one grid step. For $m = 16$ the junction capacitance at the TIA input causes 6 dB of peaking, which a bandwidth relative to 1 kHz hides.
 
 ### 6.3 Noise-equivalent power
 
@@ -407,7 +407,7 @@ The `noise` analysis runs with `save full`, so `simulations/powdet_nf_noise.raw`
 
 The two PNP contributions are all flicker noise and add to 96.6 %, the "97 % of the output noise power" of the text. The device is `Q1 A C S mod1_pnp` inside the `schottky_nbl1` subcircuit: the anode side is the collector, the n-well under the Schottky contact the base, and the substrate the emitter, a vertical PNP. Its flicker model is $K_\mathrm{F} I_\mathrm{B}^{A_\mathrm{F}}/f$ with $K_\mathrm{F}$ = 6.70e-8 and $A_\mathrm{F}$ = 0.53 on a base current of about 20 pA. The same share follows from the committed JSON alone, since the script reports the MDS with and without the PNP contributors: $1 - (P_\mathrm{MDS,noPNP}/P_\mathrm{MDS})^2$ = 96.57 %.
 
-The flicker corner, where the PNP carries half the output noise, is at 3.7 GHz for $m = 1$ (3.3 GHz post-layout), above the video bandwidth, so the fabricated detector is flicker-limited across its whole video band. For $m = 16$ the corner is at 1.04 GHz, and at 1 GHz the PNP still carries 51 % of the output noise.
+The flicker corner, where the PNP carries half the output noise, is at 3.7 GHz for $m = 1$ (3.3 GHz post-layout), above the video bandwidth, so the fabricated detector is flicker-limited across its whole video band. For $m = 16$ the corner is at 1.04 GHz, and at 1 GHz the PNP still carries 51 % of the output noise, so the 13 pW/sqrt(Hz) at 1 GHz lie "near its flicker corner", as the text puts it.
 
 ## 7. Noise figure and Eq. (3)
 
@@ -545,7 +545,7 @@ The largest magnitude is 0.18 dB, the "within 0.2 dB" of the text.
 | +0.28 dBm | 45.11 dB | 44.21 dB | 44.16 dB | 38.10 dB | +0.90 dB | +6.11 dB |
 | +6.90 dBm | 47.08 dB | 45.94 dB | 46.03 dB | 37.50 dB | +1.14 dB | +8.44 dB |
 
-The transient lies 0.63 dB to 1.14 dB above `hbnoise`, the "0.6 dB to 1.1 dB above" of the text. That offset depends on the noise realization of the transient by up to about 1 dB, see [README, 3.5](README.md#35-noise-figure-against-lo-drive-from-four-noise-estimates). The small-signal noise at the dc operating point is 2.35 dB optimistic at the minimum and 8.44 dB at +6.9 dBm. It keeps falling above -16 dBm, because the conversion keeps rising while its noise stays that of the unpumped diode. With the LO on, the average diode current rises, the PNP flicker of the detector diode grows with its base current, and the noise outruns the conversion, so all three large-signal analyses show the noise figure rising past its minimum.
+The transient lies 0.63 dB to 1.14 dB above `hbnoise`, the "0.6 dB to 1.1 dB above" of the text. That offset depends on the noise realization of the transient by up to about 1 dB, see [README, 3.5](README.md#35-noise-figure-against-lo-drive-from-four-noise-estimates). The small-signal noise at the dc operating point is 2.35 dB optimistic at the minimum and 8.44 dB at +6.9 dBm, the "2.3 dB" and "8.4 dB" of the text. It keeps falling above -16 dBm, because the conversion keeps rising while its noise stays that of the unpumped diode. With the LO on, the average diode current rises, the PNP flicker of the detector diode grows with its base current, and the noise outruns the conversion, so all three large-signal analyses show the noise figure rising past its minimum.
 
 ![Noise figure of the fabricated detector at 2 GHz IF against LO power, four noise estimates](plot_simulations/figures/sparx_powdet_sbd_nf_lo_compare.png)
 
@@ -582,22 +582,22 @@ All three lie inside the square-law region of their version, so dividing by the 
 | about 2 % into the diode branch | 2.24 % at dc, 2.32 % at 161 GHz | 4.3 |
 | $m = 16$: 251 V/W, 1.5 %, (28 - j28) Ohm, -13.3 dBm | 250.8 V/W, 1.505 %, 27.93 - j28.43 Ohm, -13.26 dBm | 5 |
 | PEX reduces $\beta$ by 6 % | 5.9 % | 5 |
-| PEX reduces the video bandwidth by 11 % | 10.9 % between grid points, 13.4 % interpolated | 6.2 |
+| PEX reduces the video bandwidth by 13 % | 13.4 % interpolated, 10.9 % between grid points | 6.2 |
 | NEP 8.7 nW/sqrt(Hz) at 1 MHz, 226 pW/sqrt(Hz) at 1 GHz | 8.68 nW/sqrt(Hz), 225.9 pW/sqrt(Hz) | 6.3 |
 | 97 % flicker noise of the parasitic PNP | 96.6 % | 6.4 |
-| 1.3 GHz video bandwidth | 1.256 GHz at the grid, 1.243 GHz interpolated | 6.2 |
+| 1.2 GHz video bandwidth | 1.243 GHz interpolated, 1.256 GHz at the grid | 6.2 |
 | NEP improves 38-fold | 38.4 | 6.3 |
-| 13 pW/sqrt(Hz) at 1 GHz for $m = 16$, above the flicker corner | 13.48 pW/sqrt(Hz), flicker corner at 1.04 GHz | 6.3, 6.4 |
+| 13 pW/sqrt(Hz) at 1 GHz for $m = 16$, near its flicker corner | 13.48 pW/sqrt(Hz), flicker corner at 1.04 GHz | 6.3, 6.4 |
 | low-IF mode adds 3 dB | 3.02 dB | 7.3 |
 | `hbac` within 0.16 dB of $2S'^2P_\mathrm{LO}$ | +0.10 dB to +0.16 dB | 7.4 |
 | NF minimum 42.3 dB and 42.7 dB at -6.3 dBm, 26.8 dB at -3.0 dBm | 42.34 dB and 42.67 dB at -6.34 dBm, 26.78 dB at -3.03 dBm | 7.6 |
 | PAC and PNOISE within 0.2 dB | 0.18 dB at most | 7.6 |
 | TN 0.6 dB to 1.1 dB above | 0.63 dB to 1.14 dB | 7.6 |
-| small-signal estimate 2.4 dB optimistic at the minimum | 2.35 dB | 7.6 |
+| small-signal estimate 2.3 dB optimistic at the minimum | 2.35 dB | 7.6 |
 | 8.4 dB optimistic at 6.9 dBm | 8.44 dB | 7.6 |
 | MDS -16.6 dBm, -16.2 dBm, -27.3 dBm | -16.58 dBm, -16.25 dBm, -27.30 dBm | 8 |
 
-Four entries need a remark. The 1.3 GHz video bandwidth and the 11 % reduction from PEX are values of the 20-points-per-decade analysis grid, and the interpolated values are 1.24 GHz and 13.4 %. The 2.4 dB at the noise-figure minimum is 2.35 dB, which rounds to 2.3 dB. And for $m = 16$, 1 GHz lies at its flicker corner of 1.04 GHz rather than above it.
+Every value of the text agrees with the data to its last quoted digit. The video bandwidths are interpolated between the points of the analysis grid, see Section 6.2, because the first grid point below -3 dB is 12 % coarse.
 
 ## 10. Reproducing the numbers
 
