@@ -1,2 +1,4 @@
 /.quarto/
 **/*.quarto_ipynb
+# copied from testbenches/xschem/plot_simulations/figures/ by scripts/copy_sim_figures.ts before every render
+/fig/sim/

@@ -5,7 +5,7 @@ all:
 	quarto render index.qmd
 
 clean: ## Delete the rendered documentation
-	rm -rf .quarto _site index.pdf
+	rm -rf .quarto _site index.pdf fig/sim
 .PHONY: clean
 
 # Extra options for the sak-open.py file browser (e.g. --all to include build outputs)

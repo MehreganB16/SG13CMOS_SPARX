@@ -1,15 +1,20 @@
+# SPDX-FileCopyrightText: 2025-2026 The SPARX Team
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+
 project:
   type: website
   output-dir: _site
+  pre-render: scripts/copy_sim_figures.ts
 
 var:
-  url-repo: https://github.com/iic-jku/SG13G2_SPARX
+  url-repo: https://github.com/iic-jku/SG13CMOS_SPARX
 
 website:
   title: "SPARX"
   favicon: fig/favicon.png
-  site-url: "https://iic-jku.github.io/SG13G2_SPARX/"
-  repo-url: "{{< meta var.url-repo >}}"
+  site-url: "https://iic-jku.github.io/SG13CMOS_SPARX/"
+  repo-url: "https://github.com/iic-jku/SG13CMOS_SPARX"
+  repo-subdir: doc
   repo-branch: main
   repo-actions: [edit, issue]
   navbar:
@@ -43,6 +48,7 @@ format:
     theme:
       light: cosmo
       dark: solar
+    css: styles.css
     fig-align: center
     lang: en-US
     lightbox: true
