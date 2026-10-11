@@ -429,8 +429,9 @@ Eight analyses in one bench, all at 159 GHz LO and 161 GHz RF applied through 50
 
 - The LO path through filter, divider and coupler loses 17.3 dB to 18.6 dB, so +12 dBm at the pad places each detector at -6.6 dBm to -5.3 dBm, which is the operating point the detector was characterized at.
 - The RF path through two couplers loses 5.4 dB to 9.3 dB.
-- The differential I and Q outputs show an amplitude imbalance of 2.0 dB and a phase difference of 85.6 degrees, which the six-port calibration absorbs.
-- That imbalance is predicted by the EM data alone to within 0.5 dB and 1.0 degrees, by forming the product of the conjugated LO-path and the RF-path S-parameters per output. The circuit simulation and the EM solve agree without any fitting.
+- The differential I and Q outputs show an amplitude imbalance of 2.0 dB and a phase difference of 85.4 degrees in the transient (85.6 degrees from `hbac`), which the six-port calibration absorbs.
+- The EM data alone predict that imbalance within 0.1 dB and 0.1 degrees. Terminating the de-embedded core on its four detector ports with the post-layout detector impedance, 40.3 - j25.0 Ohm at 161 GHz, and forming the product of the conjugated LO-path and the RF-path waves per output gives 2.1 dB and 85.3 degrees. The circuit simulation and the EM solve agree without any fitting. With 50 Ohm on every port the EM gives 2.5 dB and 84.5 degrees, so that 0.5 dB and 1.0 degree difference is the mismatch of the detectors.
+- The same mismatch makes out3 (V_Q-) the largest of the four outputs, 3.0 dB to 3.8 dB above the others. With 50 Ohm on every port out4 (V_Q+) would be the largest.
 - The transient reproduces the `hbac` amplitudes within 0.2 dB, and the two-tone HB within 0.5 dB.
 
 **Limits.**
