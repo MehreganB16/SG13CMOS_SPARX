@@ -22,10 +22,10 @@ Institute for Integrated Circuits and Quantum Computing, Johannes Kepler Univers
 
 <p align="center">
   <a href="doc/fig/sparx160/sparx160_top_black_pinout.png">
-    <img src="doc/fig/sparx160/sparx160_top_black_pinout.png" alt="Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 mm × 1.4 mm)" width=70%>
+    <img src="doc/fig/sparx160/sparx160_top_black_pinout.png" alt="Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 × 1.4 mm²)" width=70%>
   </a>
   <br>
-  <em>Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 mm × 1.4 mm).</em>
+  <em>Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 × 1.4 mm²).</em>
 </p>
 
 
@@ -34,16 +34,18 @@ Institute for Integrated Circuits and Quantum Computing, Johannes Kepler Univers
 | Parameter           | Value                                                                             |
 | ------------------- | --------------------------------------------------------------------------------- |
 | Technology          | IHP SG13CMOS (130 nm CMOS)                                                        |
-| Die Area            | 1000 × 1400 µm (1.4 mm²)                                                          |
+| Die Area            | 1 × 1.4 mm²                                                                       |
 | Supply Voltage      | 1.5 V                                                                             |
 
 
 ## Documentation
 
 > [!IMPORTANT]
-> This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible.
+> This work has been accepted for publication at the 2026 IEEE Nordic Circuits and Systems Conference (NorCAS).
+>
+> © 2026 IEEE. Personal use of this material is permitted. Permission from IEEE must be obtained for all other uses, in any current or future media, including reprinting/republishing this material for advertising or promotional purposes, creating new collective works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work in other works.
 
-The full documentation of SPARX is available [here](https://iic-jku.github.io/SG13CMOS_SPARX/index.html) (WIP).
+The full documentation of SPARX is available [here](https://iic-jku.github.io/SG13CMOS_SPARX/index.html).
 
 
 ## Overview
@@ -214,7 +216,7 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 ├─ 📁 sscs-ose-code-a-chip/
 │  ├─ 📁 assets/
 │  ├─ README.md
-│  └─ SPARX_JKU_VLSI2026.ipynb
+│  └─ SPARX_JKU_ISSCC2027.ipynb
 ├─ 📁 testbenches/
 │  └─ 📁 xschem/
 │     ├─ 📁 plot_simulations/

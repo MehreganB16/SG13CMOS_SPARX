@@ -27,7 +27,7 @@ When adding a flow or a folder, mirror the template layout and its `Makefile` co
 | `verification/drc/`, `verification/lvs/` | DRC and LVS run folders |
 | `verification/em/` | `layout/` (EM structures from `build-layout`), `palace_model/` (Palace runs), `s-parameter/` (Touchstone files), `scripts/` (Palace drivers), `stackups/` (stackup notes) |
 | `render/`, `release/v.<version>/`, `doc/` | Renders, published releases, Quarto documentation site |
-| `sscs-ose-code-a-chip/` | VLSI'26 Code-a-Chip notebook with its own copies of GDS and assets, not driven by the `Makefile` |
+| `sscs-ose-code-a-chip/` | ISSCC'27 Code-a-Chip notebook with its own copies of GDS and assets, not driven by the `Makefile` |
 | `measurements/` | Lab measurement notes |
 
 ## Makefiles
