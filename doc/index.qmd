@@ -335,7 +335,7 @@ The sweep builds the thirteen layouts in `layout/` in under one minute. The core
 
 : Die outline of the generated layouts in `layout/`, in $\mu$m. {#tbl-diesize}
 
-At 160 GHz the repository holds the DRC reports of the top cell, the EM results of every block and of the full core, and their fitted models. For the other frequencies it holds the layouts only, see @sec-issues.
+All thirteen layouts pass the KLayout DRC at `macro` level. At 160 GHz the repository also holds the EM results of every block and of the full core and their fitted models. For the other frequencies it holds the layouts only, see @sec-issues.
 
 ## Renders
 
@@ -471,7 +471,7 @@ make klayout-drc CELL=sparx_powdet_sbd DRC_LEVEL=regular
 make magic-drc CELL=sparx_powdet_sbd
 ```
 
-The committed `macro`-level KLayout report of the 160 GHz top cell has no violations. At `regular` level the top cell shows 33 antenna violations, which IHP waived for the March 2026 tapeout:
+The 160 GHz top cell has no violations at `macro` level, and neither have the generated layouts of the other twelve frequencies. At `regular` level the 160 GHz top cell shows 33 antenna violations, which IHP waived for the March 2026 tapeout:
 
 | Rules | Count | Cause |
 | :--- | :---: | :--- |
@@ -582,7 +582,7 @@ Feeding EM results back into circuit simulation has been the missing link of ope
 ## What It Does
 
 - **Universal mode.** A vector fit of the S-parameters [@Gustavsen_1999] with scikit-rf, synthesized into a macromodel of resistors, capacitors and controlled sources. It works for any structure and port count and reproduces the data within the fit error, but its elements have no physical meaning. SPARX uses this mode for every model. A structure-specific mode for known topologies (inductor, MIM capacitor, transmission line, Wilkinson, balun, branch-line coupler) maps every element to a physical one instead.
-- **Passivity.** A model is passive when the largest singular value of its S-matrix stays at or below one at every frequency. A non-passive model can feed a transient on its own excess energy and diverge although its AC response looks fine. snp2le enforces passivity [@Dhaene_2009] by default, and a passivity ceiling between 1.00 and 1.20 trades a bounded violation for accuracy where strict enforcement costs too much. SPARX uses strict enforcement.
+- **Passivity.** A model is passive when the largest singular value of its S-matrix stays at or below one at every frequency. A non-passive model can feed a transient on its own excess energy and diverge although its AC response looks fine. snp2le enforces passivity [@Dhaene_2009] by default, and a passivity ceiling between 1.00 and 1.20 trades a bounded violation for accuracy where strict enforcement costs too much. SPARX asks for strict enforcement and needs passivity inside the fitted band of 80 GHz to 240 GHz. All four models are passive there. The WPD fit keeps a peak of 1.618 at 679 GHz, outside the band, where the enforcement cannot remove it.
 - **Noiseless resistors.** The resistors of a vector fit place its poles and do not model the loss of the structure, so they are emitted with `noisy=0` (understood by ngspice and VACASK). Charging their thermal noise would report noise that follows the fit order instead of the structure.
 - **Thermal noise.** With `--thermal-noise`, snp2le adds the noise the lossy passive really has, $kT(\mathbf{I} - \mathbf{S}\mathbf{S}^\mathrm{H})$ at its ports by Bosma's theorem [@Bosma_1967], as a noise generator computed from the fit itself and appended to the subcircuit without touching a signal path. It needs a strictly passive model. VACASK sees it in `noise`, `hbnoise`, `pnoise` and transient noise, ngspice in `.noise` only. @sec-thermal-noise explains the theorem.
 - **Fit range.** The fit covers the whole file by default, or a chosen sub-band, so the model order is spent where the block operates.
@@ -631,7 +631,7 @@ make snp2le SNP=verification/em/s-parameter/sparx160_core.s7p \
     LE_NOISE=thermal
 ```
 
-`make snp2le` calls `snp2le -b convert` in universal mode with strict passivity. The flow fits all four SPARX models from the raw Touchstone files, the EM results before de-embedding. The committed BPF, WPD and BLC models in `netlist/` still come from the de-embedded files, fitted on 2026-08-30, and so do the composed-core results below. `LE_FORMAT` selects `spice` (ngspice, `netlist/spice/*.spice`) or `spectre` (VACASK, `netlist/spectre/*.inc`), and `LE_NOISE` selects `noiseless` or `thermal`. Without `LE_OUT=` the output defaults to the BPF model whatever the input is, so always pass `LE_OUT=<path>`, or `LE_OUT=` (empty) for a name derived from the input file.
+`make snp2le` calls `snp2le -b convert` in universal mode with strict passivity. All four SPARX models are fitted from the raw Touchstone files, the EM results before de-embedding. `LE_FORMAT` selects `spice` (ngspice, `netlist/spice/*.spice`) or `spectre` (VACASK, `netlist/spectre/*.inc`), and `LE_NOISE` selects `noiseless` or `thermal`. Without `LE_OUT=` the output defaults to the BPF model whatever the input is, so always pass `LE_OUT=<path>`, or `LE_OUT=` (empty) for a name derived from the input file.
 
 | Model | Input | Ports | Order | Noise |
 | :--- | :--- | :---: | :---: | :--- |
@@ -647,7 +647,7 @@ The six-port core exists in two models. The **composed** core, schematic `sparx_
 ![The order-24 full-core fit resimulated in VACASK, all 49 S-parameters split by excitation port (`sparx_core_le_tb_acsp_vacask`).](fig/sim/sparx_core_le_tb_acsp_vacask.png){#fig-core-fit .column-page width=100%}
 
 - The order-24 full-core fit reproduces the EM Touchstone at 160 GHz within 0.45 dB and 9.9° across all 49 S-parameters. Both extremes fall on one output-to-output coupling at -35 dB. Every other parameter is within 0.36 dB and 5°, and every one above -20 dB within 2.7°.
-- The composed core reproduces the LO-path imbalances of the full-core solve within 0.6 dB and 7°, but overestimates the RF-path amplitude imbalance by up to 3.1 dB, because it contains neither the coupling between adjacent couplers nor the interconnects. It converges better and runs faster, which makes it the design-iteration model, while the full-core fit is the sign-off model.
+- The composed core reproduces the LO-path imbalances of the full-core solve within 0.4 dB and 5.5°, but overestimates the RF-path amplitude imbalance by up to 2.9 dB, because it contains neither the coupling between adjacent couplers nor the interconnects. It converges better and runs faster, which makes it the design-iteration model, while the full-core fit is the sign-off model.
 - ngspice and VACASK agree within 0.001 dB on both models. That validates the two netlist dialects and nothing more, since both describe the same fit.
 - The core's thermal noise adds 0.0001 dB to the receiver noise figure, because 6 dB to 10 dB of passive loss sits in front of detectors with a 42 dB noise figure.
 
@@ -768,11 +768,11 @@ The measurement plan probes the LO and RF pads with a wafer prober and bonds the
 
 - **Top-level LVS** is open, blocked by [IHP-Open-PDK issue 1041](https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1041). Only the power detector has full LVS.
 - **Antenna rules.** `klayout-drc-regular` reports the 33 antenna violations IHP waived for the tapeout, see @tbl-antenna.
-- **Frequencies other than 160 GHz** are generated, but the repository holds no DRC report and no EM result for them.
+- **Frequencies other than 160 GHz** pass the `macro`-level DRC, but the repository holds no DRC report and no EM result for them.
 - **Author label.** Every generated layout carries the label "SPARX 160", whatever its frequency, because the label is a fixed image, `scripts/assets/D_Kellerer.png`, placed as a committed GDS.
 - **BPF.** The closed-form models reach their limits on the meanders and coupled lines of the hairpin filter: the 160 GHz filter loses 10 dB and matches only to -6.2 dB, in the LO path. It is the block with the most to gain from optimization.
 - **No mesh-convergence study.** The committed Palace runs use element order 2 on a single mesh without adaptive refinement.
-- **Fit extrapolation.** The fits see the EM band from 80 GHz to 240 GHz only. The receiver benches also evaluate the core at the IF and at the LO harmonics, where the passive fit extrapolates. The detector noise figure plus the RF path loss, a composition in which the detector sees 50 $\Omega$ at every frequency, agrees with the simulated receiver within 0.3 dB, which bounds the effect at the operating point.
+- **Fit extrapolation.** The fits see the EM band from 80 GHz to 240 GHz only, and they are passive inside it. Above it the WPD fit reaches a largest singular value of 1.618 at 679 GHz. The receiver benches also evaluate the core at the IF and at the LO harmonics, where the passive fit extrapolates. The detector noise figure plus the RF path loss, a composition in which the detector sees 50 $\Omega$ at every frequency, agrees with the simulated receiver within 0.3 dB, which bounds the effect at the operating point.
 - **Detector noise model.** 97 % of the detector noise comes from the flicker model of a parasitic PNP evaluated far below any characterized current, and its value depends on the BJT area scaling of the simulator build. Measurements will show how far it applies.
 - **Detector guard rings.** The substrate guard rings of the two Schottky diodes are not tied to ground by metal. The `vss` network of the full-RC extraction therefore comes out differently in every run (`extresist` reports an orphaned node), and the VACASK benches idealize that net.
 - **Toolchain versions.** The PSS and NF benches need VACASK `1b48553` or later, and the thermal-noise fit needs snp2le 0.1.10 or later, see @sec-requirements.
