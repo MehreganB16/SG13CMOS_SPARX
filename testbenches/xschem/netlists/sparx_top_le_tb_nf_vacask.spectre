@@ -1,0 +1,217 @@
+// sch_path: /foss/designs/SG13CMOS_SPARX/testbenches/xschem/sparx_top_le_tb_nf_vacask.sch
+//subckt sparx_top_le_tb_nf_vacask ( )
+vlo ( lo_src GND ) vsource type="sine" sinedc=0 ampl=0 freq=freq_lo 
+Rlo ( vlo lo_src ) resistor r=50 $mfactor=1 
+vrf ( rf_src GND ) vsource type="sine" sinedc=0 ampl=0 freq=freq_rf spur={[1]} smag=[1] 
+Rrf ( vrf rf_src ) resistor r=50 $mfactor=1 
+VDD ( VDD GND ) vsource dc=1.5 
+C1 ( vout1 GND ) capacitor c=5p $mfactor=1 
+C2 ( vout2 GND ) capacitor c=5p $mfactor=1 
+C3 ( vout3 GND ) capacitor c=5p $mfactor=1 
+C4 ( vout4 GND ) capacitor c=5p $mfactor=1 
+C5 ( vref1 GND ) capacitor c=5p $mfactor=1 
+C6 ( vref2 GND ) capacitor c=5p $mfactor=1 
+C7 ( vref3 GND ) capacitor c=5p $mfactor=1 
+C8 ( vref4 GND ) capacitor c=5p $mfactor=1 
+E1 ( out1 GND vout1 vref1 ) vcvs gain=1 
+E2 ( out2 GND vout2 vref2 ) vcvs gain=1 
+E3 ( out3 GND vout3 vref3 ) vcvs gain=1 
+E4 ( out4 GND vout4 vref4 ) vcvs gain=1 
+x1 ( vout2 vout1 VDD GND vref1 vref2 vrf vlo vout4 vref4 vref3 vout3 ) sparx_top_le 
+//// begin user architecture code
+
+
+
+control
+  // Receiver noise figure: the order-24 full-core fit sparx_core_le drives the
+  // four detectors inside sparx_top_le, as in sparx_top_le_tb_rx_vacask. LO on
+  // core port 1, RF on port 2, both behind 50 Ohm, so a source amplitude a is
+  // an available power a^2 / (8 * 50) at the pad: +12 dBm=2.52 V.
+  // vrf carries spur={[1]} smag=[1], the unit upper-sideband tone of hbac.
+  //
+  // Six outputs: the differential detector outputs out1..out4 (vout - vref)
+  // and the six-port I and Q outputs, out2 - out1 and out4 - out3, as node
+  // pairs. The source of the noise figure is Rrf.
+  //
+  // The fitted resistors of sparx_core_le are noiseless (noisy=0). The core's
+  // thermal noise comes from the generator snp2le --thermal-noise appends
+  // (Rnz_e1 to Rnz_e7), and the plot script reports its share.
+  var freq_lo=159G
+  var freq_rf=161G
+  var ampl_lo=2.52
+  var tper_lo=1/freq_lo
+
+  // No include of the .save file: its operating-point saves bind to op and
+  // noise but not to hbac or hbnoise, which then write no rawfile. The default
+  // save keeps n(instance) of every noisy instance for the contributor ranking.
+
+  analysis op1 op
+
+  // (1) Output noise at the dc operating point, LO off.
+  analysis rxnf_noise_out1 noise out="out1" in="vrf" from=1k to=5G mode="dec" points=10
+  analysis rxnf_noise_out2 noise out="out2" in="vrf" from=1k to=5G mode="dec" points=10
+  analysis rxnf_noise_out3 noise out="out3" in="vrf" from=1k to=5G mode="dec" points=10
+  analysis rxnf_noise_out4 noise out="out4" in="vrf" from=1k to=5G mode="dec" points=10
+  analysis rxnf_noise_i noise out=["out2", "out1"] in="vrf" from=1k to=5G mode="dec" points=10
+  analysis rxnf_noise_q noise out=["out4", "out3"] in="vrf" from=1k to=5G mode="dec" points=10
+
+  // (2) HB of the LO, stored, then the conversion of each sideband to the IF
+  //     from hbac around it. spur [1] is RF=LO + f, [-1] is RF=LO - f.
+  //     15 harmonics, the count the LO sweep needs at +18 dBm. The LO
+  //     amplitude is a literal because a sweep cannot follow a parameter bound
+  //     to an expression. Keep it equal to ampl_lo.
+  alter instance("vlo") ampl=2.52
+  analysis rxnf_hb hb freq=[freq_lo] nharm=15 store="hb_lo"
+  analysis rxnf_hbac_usb hbac hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 outspur=[0] from=1k to=5G mode="dec" points=10
+  alter instance("vrf") spur={[-1]}
+  analysis rxnf_hbac_lsb hbac hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 outspur=[0] from=1k to=5G mode="dec" points=10
+  alter instance("vrf") spur={[1]}
+
+  // (3) Output noise with the LO on, from hbnoise at the stored HB solution.
+  //     gain is |V_out / V_in|^2 for a unit tone at inspur, the hbac transfer.
+  analysis rxnf_hbnoise_out1 hbnoise hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out1" from=1k to=5G mode="dec" points=10
+  analysis rxnf_hbnoise_out2 hbnoise hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out2" from=1k to=5G mode="dec" points=10
+  analysis rxnf_hbnoise_out3 hbnoise hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out3" from=1k to=5G mode="dec" points=10
+  analysis rxnf_hbnoise_out4 hbnoise hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out4" from=1k to=5G mode="dec" points=10
+  analysis rxnf_hbnoise_i hbnoise hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out=["out2", "out1"] from=1k to=5G mode="dec" points=10
+  analysis rxnf_hbnoise_q hbnoise hbsolve=0 nodeset="hb_lo" freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out=["out4", "out3"] from=1k to=5G mode="dec" points=10
+
+  // (4) Conversion and pumped noise at a 2 GHz IF against the LO power at the
+  //     pad, -6 dBm to +18 dBm in 2 dB steps with 2.52 V for +12 dBm. A sweep
+  //     body holds one analysis, so the sweep is written once per output.
+  sweep a_lo instance="vlo" parameter="ampl" values=[0.317, 0.399, 0.5024, 0.6325, 0.7962, 1.002, 1.262, 1.589, 2.0, 2.52, 3.17, 3.991, 5.024]
+    analysis rxnf_hbac_lo hbac freq=[freq_lo] nharm=15 outspur=[0] values=[2G]
+  sweep a_lo_1 instance="vlo" parameter="ampl" values=[0.317, 0.399, 0.5024, 0.6325, 0.7962, 1.002, 1.262, 1.589, 2.0, 2.52, 3.17, 3.991, 5.024]
+    analysis rxnf_hbnoise_lo_out1 hbnoise freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out1" values=[2G]
+  sweep a_lo_2 instance="vlo" parameter="ampl" values=[0.317, 0.399, 0.5024, 0.6325, 0.7962, 1.002, 1.262, 1.589, 2.0, 2.52, 3.17, 3.991, 5.024]
+    analysis rxnf_hbnoise_lo_out2 hbnoise freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out2" values=[2G]
+  sweep a_lo_3 instance="vlo" parameter="ampl" values=[0.317, 0.399, 0.5024, 0.6325, 0.7962, 1.002, 1.262, 1.589, 2.0, 2.52, 3.17, 3.991, 5.024]
+    analysis rxnf_hbnoise_lo_out3 hbnoise freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out3" values=[2G]
+  sweep a_lo_4 instance="vlo" parameter="ampl" values=[0.317, 0.399, 0.5024, 0.6325, 0.7962, 1.002, 1.262, 1.589, 2.0, 2.52, 3.17, 3.991, 5.024]
+    analysis rxnf_hbnoise_lo_out4 hbnoise freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out="out4" values=[2G]
+  sweep a_lo_i instance="vlo" parameter="ampl" values=[0.317, 0.399, 0.5024, 0.6325, 0.7962, 1.002, 1.262, 1.589, 2.0, 2.52, 3.17, 3.991, 5.024]
+    analysis rxnf_hbnoise_lo_i hbnoise freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out=["out2", "out1"] values=[2G]
+  sweep a_lo_q instance="vlo" parameter="ampl" values=[0.317, 0.399, 0.5024, 0.6325, 0.7962, 1.002, 1.262, 1.589, 2.0, 2.52, 3.17, 3.991, 5.024]
+    analysis rxnf_hbnoise_lo_q hbnoise freq=[freq_lo] nharm=15 in="vrf" inspur=[1] outspur=[0] out=["out4", "out3"] values=[2G]
+
+  // (5) The same around the periodic steady state of the LO found by
+  //     shooting, which shares no code with HB: pac is the twin of hbac,
+  //     pnoise of hbnoise. The PSS is solved once and stored. stabstep is
+  //     required: from rest the stabilisation transient on the fitted core cuts
+  //     its step below 1 fs within the first 5 fs, Newton then no longer passes
+  //     its residual check, and the analysis aborts. That happens at the default
+  //     T/1000=6.3 fs and at 10f with -6 dBm of LO, 20f and 50f run at every
+  //     LO level of (4). The shooting itself still runs at T/1000.
+  alter instance("vrf") spur={1}
+  analysis rxnf_pac_usb pac tper=tper_lo tstab=50*tper_lo stabstep=50f maxharm=9 truncharm=9 outharm=0 store="pss_lo" from=1k to=5G mode="dec" points=10
+  alter instance("vrf") spur={-1}
+  analysis rxnf_pac_lsb pac psssolve=0 ic="pss_lo" truncharm=9 outharm=0 from=1k to=5G mode="dec" points=10
+  alter instance("vrf") spur={[1]}
+  analysis rxnf_pnoise_out1 pnoise psssolve=0 ic="pss_lo" truncharm=9 in="vrf" inharm=1 outharm=0 out="out1" from=1k to=5G mode="dec" points=10
+  analysis rxnf_pnoise_out2 pnoise psssolve=0 ic="pss_lo" truncharm=9 in="vrf" inharm=1 outharm=0 out="out2" from=1k to=5G mode="dec" points=10
+  analysis rxnf_pnoise_out3 pnoise psssolve=0 ic="pss_lo" truncharm=9 in="vrf" inharm=1 outharm=0 out="out3" from=1k to=5G mode="dec" points=10
+  analysis rxnf_pnoise_out4 pnoise psssolve=0 ic="pss_lo" truncharm=9 in="vrf" inharm=1 outharm=0 out="out4" from=1k to=5G mode="dec" points=10
+  analysis rxnf_pnoise_i pnoise psssolve=0 ic="pss_lo" truncharm=9 in="vrf" inharm=1 outharm=0 out=["out2", "out1"] from=1k to=5G mode="dec" points=10
+  analysis rxnf_pnoise_q pnoise psssolve=0 ic="pss_lo" truncharm=9 in="vrf" inharm=1 outharm=0 out=["out4", "out3"] from=1k to=5G mode="dec" points=10
+
+  // (6) pnoise against the LO drive for the I and Q outputs, the twin of (4)
+  //     at every third level. Every point solves its own PSS, which takes
+  //     minutes on the extracted detectors.
+  sweep a_lo_pi instance="vlo" parameter="ampl" values=[0.317, 0.6325, 1.262, 2.52, 5.024]
+    analysis rxnf_pnoise_lo_i pnoise tper=tper_lo tstab=50*tper_lo stabstep=50f maxharm=9 truncharm=9 in="vrf" inharm=1 outharm=0 out=["out2", "out1"] values=[2G]
+  sweep a_lo_pq instance="vlo" parameter="ampl" values=[0.317, 0.6325, 1.262, 2.52, 5.024]
+    analysis rxnf_pnoise_lo_q pnoise tper=tper_lo tstab=50*tper_lo stabstep=50f maxharm=9 truncharm=9 in="vrf" inharm=1 outharm=0 out=["out4", "out3"] values=[2G]
+
+  postprocess(PYTHON, "../plot_simulations/plot_sparx_top_le_tb_nf_vacask.py")
+endc
+
+
+
+
+
+include "sg13g2_vacask_common.lib"
+include "cornerMOSlv.lib" section=mos_tt
+include "cornerRES.lib" section=res_typ
+include "cornerCAP.lib" section=cap_typ
+include "cornerDIO.lib" section=dio_tt
+// capacitor, resistor, vsource and vcvs models are auto-emitted by the symbols
+// of this bench, the fitted core needs the controlled sources on top of them.
+model vccs vccs
+model cccs cccs
+include "../../../netlist/spectre/sparx_core_le.inc"
+
+
+//// end user architecture code
+//ends
+
+// expanding   symbol:  sparx_top_le.sym # of pins=20
+// sym_path: /foss/designs/SG13CMOS_SPARX/schematic/xschem/sparx_top_le.sym
+// sch_path: /foss/designs/SG13CMOS_SPARX/schematic/xschem/sparx_top_le.sch
+subckt sparx_top_le ( vout2 vout1 vdd vss vref1 vref2 vrf vlo vout4 vref4 vref3 vout3 )
+//.ipin vrf
+//.opin vout1
+//.iopin vdd
+//.opin vref1
+//.opin vref2
+//.opin vout2
+//.ipin vlo
+//.iopin vss
+//.iopin vss
+//.opin vout3
+//.iopin vdd
+//.opin vref3
+//.opin vref4
+//.opin vout4
+//.iopin vss
+//.iopin vss
+//.iopin vss
+//.iopin vss
+//.iopin vss
+//.iopin vss
+x1 ( vout1 vref1 vdd net1 vss ) sparx_powdet_sbd 
+x2 ( vout2 vref2 vdd net2 vss ) sparx_powdet_sbd 
+x3 ( vout3 vref3 vdd net3 vss ) sparx_powdet_sbd 
+x9 ( vout4 vref4 vdd net4 vss ) sparx_powdet_sbd 
+XR1 ( net5 vss vss ) rsil w=0.5e-6 l=2.5e-6 m=1 mm_ok=1 
+x4 ( vlo vrf net1 net2 net4 net3 net5 ) sparx_core_le 
+ends 
+
+
+// expanding   symbol:  sparx_powdet_sbd.sym # of pins=5
+// sym_path: /foss/designs/SG13CMOS_SPARX/schematic/xschem/sparx_powdet_sbd.sym
+// sch_path: /foss/designs/SG13CMOS_SPARX/schematic/xschem/sparx_powdet_sbd.sch
+subckt sparx_powdet_sbd ( vout vref vdd rfin vss )
+//.ipin rfin
+//.opin vout
+//.iopin vss
+//.iopin vdd
+//.opin vref
+XR1 ( bias1 rfin_int vss ) rsil w=0.5e-6 l=2.5e-6 m=1 mm_ok=1 
+XD1 ( rfin_int bb_int vss ) schottky_nbl1 nx=1 ny=1 
+XC2 ( bias1 vss ) cap_cmim w=10e-6 l=10e-6 m=30 mm_ok=1 
+XM4 ( vout bb_int vdd vdd ) sg13_lv_pmos w=100u l=0.13u ng=20 m=1 mm_ok=1 
+XM3 ( vout bb_int vss vss ) sg13_lv_nmos w=50u l=0.13u ng=20 m=1 mm_ok=1 
+XR2 ( vout bb_int vss ) rppd w=0.5e-6 l=1.5e-6 m=1 b=0 mm_ok=1 
+XM2 ( vref bias2 vdd vdd ) sg13_lv_pmos w=10u l=0.13u ng=2 m=1 mm_ok=1 
+XM1 ( vref bias2 vss vss ) sg13_lv_nmos w=5u l=0.13u ng=2 m=1 mm_ok=1 
+XC3 ( vdd vss ) cap_cmim w=10e-6 l=10e-6 m=28 mm_ok=1 
+XD2 ( net1 bias2 vss ) schottky_nbl1 nx=1 ny=1 
+XR3 ( bias1 vdd vss ) rhigh w=0.5e-6 l=2e-6 m=1 b=0 mm_ok=1 
+XR4 ( vref bias2 vss ) rppd w=0.5e-6 l=1.5e-6 m=1 b=0 mm_ok=1 
+XR5 ( bias1 net1 vss ) rsil w=0.5e-6 l=2.5e-6 m=1 mm_ok=1 
+XMdummy1 ( vss vss vss vss ) sg13_lv_nmos w=5u l=0.13u ng=2 m=1 mm_ok=1 
+XMdummy2 ( vdd vdd vdd vdd ) sg13_lv_pmos w=10u l=0.13u ng=2 m=1 mm_ok=1 
+XC1 ( rfin rfin_int ) cap_cmim w=10e-6 l=10e-6 m=1 mm_ok=1 
+XC4 ( vdd vss ) cap_cmim w=6.8e-6 l=9e-6 m=2 mm_ok=1 
+ends 
+
+ground GND 
+global VDD 
+//// begin user architecture code
+model vsource vsource
+load "resistor.osdi"
+model resistor resistor
+load "capacitor.osdi"
+model capacitor capacitor
+model vcvs vcvs
+//// end user architecture code

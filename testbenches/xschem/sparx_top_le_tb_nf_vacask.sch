@@ -88,9 +88,9 @@ control
   // and the six-port I and Q outputs, out2 - out1 and out4 - out3, as node
   // pairs. The source of the noise figure is Rrf.
   //
-  // The fitted resistors of sparx_core_le are noiseless (noisy=0), so the
-  // passive core adds no thermal noise. The plot script bounds what that
-  // leaves out.
+  // The fitted resistors of sparx_core_le are noiseless (noisy=0). The core's
+  // thermal noise comes from the generator snp2le --thermal-noise appends
+  // (Rnz_e1 to Rnz_e7), and the plot script reports its share.
   var freq_lo=159G
   var freq_rf=161G
   var ampl_lo=2.52
