@@ -585,11 +585,42 @@ Feeding EM results back into circuit simulation has been the missing link of ope
 - **Universal mode.** A vector fit of the S-parameters [@Gustavsen_1999] with scikit-rf, synthesized into a macromodel of resistors, capacitors and controlled sources. It works for any structure and port count and is electrically exact within the fit, but not physically interpretable. SPARX uses this mode for every model. A structure-specific mode for known topologies (inductor, MIM capacitor, transmission line, Wilkinson, balun, branch-line coupler) maps every element to a physical one instead.
 - **Passivity.** A model is passive when the largest singular value of its S-matrix stays at or below one at every frequency. A non-passive model can feed a transient on its own excess energy and diverge although its AC response looks fine. snp2le enforces passivity [@Dhaene_2009] by default, and a passivity ceiling between 1.00 and 1.20 trades a bounded violation for accuracy where strict enforcement costs too much. SPARX uses strict enforcement.
 - **Noiseless resistors.** The resistors of a vector fit place the poles of the fit, they do not model the loss of the structure, so they are emitted with `noisy=0` (understood by ngspice and VACASK). Charging their thermal noise would report noise that follows the fit order instead of the structure.
-- **Thermal noise.** With `--thermal-noise`, snp2le adds the noise the lossy passive really has, $kT(\mathbf{I} - \mathbf{S}\mathbf{S}^\mathrm{H})$ at its ports by Bosma's theorem [@Bosma_1967], as a noise generator computed from the fit itself and appended to the subcircuit without touching a signal path. It needs a strictly passive model. VACASK sees it in `noise`, `hbnoise`, `pnoise` and transient noise, ngspice in `.noise` only.
+- **Thermal noise.** With `--thermal-noise`, snp2le adds the noise the lossy passive really has, $kT(\mathbf{I} - \mathbf{S}\mathbf{S}^\mathrm{H})$ at its ports by Bosma's theorem [@Bosma_1967], as a noise generator computed from the fit itself and appended to the subcircuit without touching a signal path. It needs a strictly passive model. VACASK sees it in `noise`, `hbnoise`, `pnoise` and transient noise, ngspice in `.noise` only. @sec-thermal-noise explains the theorem.
 - **Fit range.** The fit covers the whole file by default, or a chosen sub-band, so the model order is spent where the block operates.
 - **Naming.** The output file name sets the `.SUBCKT` name, and the Xschem symbol carries the same name, so file stem, subcircuit and symbol stay one name (for example `sparx_wpd_le.spice`, `.SUBCKT sparx_wpd_le`, `sparx_wpd_le.sym`).
 
 The GUI shows the fit against the data, the passivity result, the synthesized schematic and the netlist, and runs an Xschem testbench of the exported model. `snp2le verification/em/s-parameter/sparx160_bpf_deembedded.s2p` opens it on a SPARX block.
+
+## Thermal Noise and Bosma's Theorem {#sec-thermal-noise}
+
+A lossy passive is a noise source, and at a uniform temperature its noise follows from its S-parameters alone. In wave form, every port $k$ of a noisy N-port emits a noise wave $c_k$ on top of the scattered signal,
+
+$$
+\mathbf{b} = \mathbf{S}\,\mathbf{a} + \mathbf{c},
+$$ {#eq-noise-waves}
+
+with $\mathbf{a}$ and $\mathbf{b}$ the incident and outgoing power waves at the reference impedance $Z_0 = 50\ \Omega$. The noise-wave correlation matrix $\mathbf{C}_\mathrm{S}$ holds their spectral densities, $\mathbf{C}_\mathrm{S}\,\Delta f = \overline{\mathbf{c}\,\mathbf{c}^\mathrm{H}}$ over a band $\Delta f$, in W/Hz. Its diagonal entry $(\mathbf{C}_\mathrm{S})_{kk}$ is the noise power per hertz that port $k$ sends into a matched load, and an off-diagonal entry $(\mathbf{C}_\mathrm{S})_{kl}$ says how strongly the noise at ports $k$ and $l$ is correlated. The subscript S marks this scattering form. The impedance form $\mathbf{C}_\mathrm{Z}$ uses open-circuit noise voltages instead, and the admittance form $\mathbf{C}_\mathrm{Y}$ short-circuit noise currents.
+
+Bosma's theorem [@Bosma_1967] gives $\mathbf{C}_\mathrm{S}$ of a linear passive N-port in thermal equilibrium at temperature $T$:
+
+$$
+\mathbf{C}_\mathrm{S} = kT\,(\mathbf{I} - \mathbf{S}\mathbf{S}^\mathrm{H}),
+$$ {#eq-bosma}
+
+with $k$ the Boltzmann constant, $\mathbf{I}$ the identity matrix and $\mathbf{S}^\mathrm{H}$ the Hermitian (conjugate) transpose of the S-matrix, $(\mathbf{S}^\mathrm{H})_{ij} = S_{ji}^*$, also written $\mathbf{S}^\dagger$. Twiss's theorem is the same statement in impedance form, $\mathbf{C}_\mathrm{Z} = 2kT\,(\mathbf{Z} + \mathbf{Z}^\mathrm{H})$, which for a one-port is Nyquist's $4kTR$ [@Twiss_1955]. At 27 °C, $kT = 4.14 \times 10^{-21}\ \mathrm{W/Hz}$, or -173.8 dBm/Hz.
+
+What @eq-bosma says:
+
+- **The diagonal is the loss.** $(\mathbf{C}_\mathrm{S})_{kk} = kT\,(1 - \sum_j |S_{kj}|^2)$. In a reciprocal network, $\mathbf{S} = \mathbf{S}^\mathrm{T}$, the sum is the power that leaves all ports when unit power enters port $k$, so $1 - \sum_j |S_{kj}|^2$ is the fraction of that power the network dissipates. Each port emits $kT$ times the share of power it absorbs, the circuit form of Kirchhoff's law of thermal radiation.
+- **A lossless network is noiseless.** Its S-matrix is unitary, $\mathbf{S}\mathbf{S}^\mathrm{H} = \mathbf{I}$, so $\mathbf{C}_\mathrm{S} = \mathbf{0}$.
+- **A matched resistor emits the full $kT$.** With $\mathbf{S} = \mathbf{0}$, every port emits $kT$, the available noise power of a resistor.
+- **Ports share their noise.** The off-diagonal entries $-kT \sum_j S_{kj} S_{lj}^*$ are nonzero whenever two ports see the same lossy elements, so the noise at two outputs is correlated and does not simply add.
+- **Passivity and noise are one condition.** $\mathbf{C}_\mathrm{S}$ is a covariance and must be positive semidefinite, which holds exactly when the largest singular value of $\mathbf{S}$ is at most one. A non-passive model would need negative noise, which is why snp2le adds the noise to a strictly passive fit only.
+- **The noise needs no extra data.** Everything in @eq-bosma is already in the Touchstone file, so the noise is as good as the conductor and dielectric loss of the EM solve, and no better.
+
+For the 160 GHz core, @eq-bosma applied to the raw full-core EM data (`verification/em/s-parameter/sparx160_core.s7p`) at 160 GHz gives 0.69 $kT$ at the LO port $P_1$, whose path runs through the BPF, the WPD and a coupler, 0.29 $kT$ at the RF port $P_2$, 0.45 $kT$ to 0.55 $kT$ at the four outputs $P_3$ to $P_6$ and 0.44 $kT$ at the terminated port 7. The smallest eigenvalue of $\mathbf{I} - \mathbf{S}\mathbf{S}^\mathrm{H}$ is 0.14 at 160 GHz and 0.048 over the whole file from 80 GHz to 240 GHz, so the data is strictly passive and dissipates power for every excitation. The largest correlation coefficient between two ports, $|(\mathbf{C}_\mathrm{S})_{kl}| / \sqrt{(\mathbf{C}_\mathrm{S})_{kk}(\mathbf{C}_\mathrm{S})_{ll}}$, is 0.29, between $P_6$ and port 7.
+
+The fit's own resistors cannot carry this noise, since they place the poles of the fit and do not model the loss. With `LE_NOISE=thermal` (snp2le `--thermal-noise`), snp2le factors $\mathbf{I} - \mathbf{S}\mathbf{S}^\mathrm{H}$ of the fitted model by the bounded-real lemma into a causal noise generator, driven by one white source of density $kT$ per port, and appends it to the subcircuit without touching the signal network. The [snp2le README](https://github.com/iic-jku/snp2le#thermal-noise) describes the generator. Its noise follows the simulator temperature like a resistor's. In SPARX only the full-core fit carries it (@tbl-le-models), and it adds 0.0001 dB to the receiver noise figure (@sec-rx-nf).
 
 ## Models in SPARX
 
