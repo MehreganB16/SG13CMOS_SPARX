@@ -114,9 +114,9 @@ WPD_EM_NAME  := sparx$(FREQ)_wpd
 BPF_EM_NAME  := sparx$(FREQ)_bpf
 CORE_EM_NAME := sparx$(FREQ)_core
 
-# S-parameter to lumped element netlist conversion with snp2le (always the de-embedded EM result)
+# S-parameter to lumped element netlist conversion with snp2le (the raw EM result)
 # Override with: make snp2le SNP=<file.sNp> ORDER=<N> LE_FORMAT=<spice|spectre> LE_OUT=<output_path> LE_NOISE=<noiseless|thermal>
-SNP ?= $(EM_SPARAM_DIR)/$(BPF_EM_NAME)_deembedded.s2p
+SNP ?= $(EM_SPARAM_DIR)/$(BPF_EM_NAME).s2p
 ORDER ?= 13
 LE_FORMAT ?= spice
 LE_OUT ?= netlist/spice/sparx_bpf_le.spice
@@ -442,7 +442,7 @@ copy-sparam: ## Copy the raw and de-embedded Touchstone files of an EM run to ve
 
 # Netlist Conversion Target
 snp2le: ## Convert an S-parameter Touchstone file to a lumped element netlist via a universal fit (usage: make snp2le SNP=<file.sNp> [ORDER=<N>] [LE_FORMAT=<spice|spectre>] [LE_OUT=<path>] [LE_NOISE=<noiseless|thermal>])
-	@if [ -z "$(SNP)" ]; then echo "ERROR: set the input Touchstone file, e.g. make snp2le SNP=verification/em/s-parameter/sparx160_blc_deembedded.s4p"; exit 1; fi
+	@if [ -z "$(SNP)" ]; then echo "ERROR: set the input Touchstone file, e.g. make snp2le SNP=verification/em/s-parameter/sparx160_blc.s4p"; exit 1; fi
 	case "$(LE_FORMAT)" in \
 		spice)   SNP2LE_FORMAT=ngspice; DEFAULT_OUT=$(NET_SPICE_DIR)/$$(basename $(SNP) | sed -E 's/\.s[0-9]+p$$//I')_le.spice ;; \
 		spectre) SNP2LE_FORMAT=vacask;  DEFAULT_OUT=$(NET_SPECTRE_DIR)/$$(basename $(SNP) | sed -E 's/\.s[0-9]+p$$//I')_le.inc ;; \
@@ -569,13 +569,13 @@ all: ## Build, verify, EM-simulate, extract LE models, and run all testbenches (
 	$(MAKE) copy-sparam SPARAM=$(BPF_EM_NAME)
 	$(MAKE) copy-sparam SPARAM=$(WPD_EM_NAME)
 	$(MAKE) copy-sparam SPARAM=$(BLC_EM_NAME)
-# 	De-embedded S-parameter to lumped element netlist conversion (SPICE and Spectre) for BPF, WPD, BLC
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BPF_EM_NAME)_deembedded.s2p ORDER=13 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_bpf_le.spice
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BPF_EM_NAME)_deembedded.s2p ORDER=13 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_bpf_le.inc
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME)_deembedded.s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME)_deembedded.s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME)_deembedded.s4p ORDER=6 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_blc_le.spice
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME)_deembedded.s4p ORDER=6 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_blc_le.inc
+# 	Raw S-parameter to lumped element netlist conversion (SPICE and Spectre) for BPF, WPD, BLC
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BPF_EM_NAME).s2p ORDER=13 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_bpf_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BPF_EM_NAME).s2p ORDER=13 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_bpf_le.inc
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME).s4p ORDER=6 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_blc_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME).s4p ORDER=6 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_blc_le.inc
 # 	Xschem testbench simulations
 	$(MAKE) sim-all
 .PHONY: all
@@ -616,9 +616,9 @@ regression: ## Regression test target for IIC-OSIC-TOOLS (usage: make regression
 # 	Copy the raw and de-embedded S-parameter results (WPD): the fresh sim-wpd-em output when
 # 	NIGHTLY_REGRESSION=1, otherwise the committed Palace output.
 	$(MAKE) copy-sparam SPARAM=$(WPD_EM_NAME)
-# 	De-embedded S-parameter to lumped-element netlist conversion (WPD).
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME)_deembedded.s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME)_deembedded.s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
+# 	Raw S-parameter to lumped-element netlist conversion (WPD).
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
 # 	Xschem netlisting + one ngspice and one VACASK AC S-parameter simulation.
 	$(MAKE) sim-xschem TB=sparx_wpd_le_tb_acsp_ngspice
 	$(MAKE) sim-xschem TB=sparx_wpd_le_tb_acsp_vacask
