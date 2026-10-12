@@ -459,6 +459,7 @@ Both flows use `sak-drc.sh` and write per-cell run folders, `verification/drc/<C
 | Check | `precheck` | `macro` (default) | `regular` |
 | :--- | :---: | :---: | :---: |
 | Foundry precheck rule set | $\checkmark$ | $\checkmark$ | $\checkmark$ |
+| Pin and label checks | $\checkmark$ | $\checkmark$ | $\checkmark$ |
 | Full FEOL and BEOL rules, off-grid, angle, recommended rules | | $\checkmark$ | $\checkmark$ |
 | Density, extra rules, antenna | | | $\checkmark$ |
 
