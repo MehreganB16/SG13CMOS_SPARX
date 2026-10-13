@@ -4,9 +4,7 @@ A stackup XML is what turns a GDS into a 3D model: the materials, the dielectric
 top to bottom, and the map from GDS layer number to a z-range. A model script names exactly
 one of them.
 
-**The files are not in this repository.** They ship with the PDK, so the stackup always
-matches the `gds2palace` that reads it. This folder holds the documentation and the figures
-only.
+**The files are not in this repository.** They ship with the PDK, in its `libs.tech/palace` submodule. The `gds2palace` package that reads them does not: IIC-OSIC-TOOLS installs it separately with pip, so the files and the reader can come from different gds2palace versions (see below). This folder holds the documentation and the figures only.
 
 ## Where they are
 
@@ -21,10 +19,11 @@ $PDK_ROOT/$PDK/libs.tech/palace/doc/XML_stackup_format/           the format ref
 [gds2palace_ihp_sg13g2](https://github.com/VolkerMuehlhaus/gds2palace_ihp_sg13g2), so the
 version you get is whatever the PDK pins and the container installs. IIC-OSIC-TOOLS clones
 the `iic-jku` fork's `dev` branch with `--recursive`, so the whole palace tree is present in
-the image, `workflow/`, `more_examples/` and `doc/` alike. Since 2026-08-21 that fork pins
-gds2palace 0.4.0 (reader 1.7.2), which reads every schema version below. `ihp-sg13cmos5l` has no
+the image, `workflow/`, `more_examples/` and `doc/` alike. `ihp-sg13cmos5l` has no
 `libs.tech/palace` at all, which is why the SG13CMOS5L stackups below come from the SG13G2
 side.
+
+**The reader is not the PDK's copy.** Python does not import the tree's own `workflow/gds2palace/` package. IIC-OSIC-TOOLS installs `gds2palace` from PyPI at a version pinned in its image build, and that copy wins. In `hpretl/iic-osic-tools:latest` (built 2026-09-22) the PDK tree carries gds2palace 0.4.0 (reader 1.7.2) and Python imports 0.5.2 (reader 1.9.4). Both read every schema version below. From the PDK tree the flow uses only the stackup files and `scripts/combine_extend_snp.py`, which the `Makefile` runs after each solve.
 
 Upstream moved the production stackups from `workflow/` to `XML_stackup/legacy/` on 2026-09-26, byte for byte unchanged, and added schemaVersion 3.1 successors in `XML_stackup/latest/IHP/`, which need gds2palace 0.5.0 or newer. Which folder holds the production files therefore depends on the gds2palace the PDK pins, so both scripts look in `XML_stackup/legacy/` first and in `workflow/` second.
 
@@ -42,17 +41,15 @@ shields the silicon, so leaving the substrate out of the model costs almost noth
 accuracy and saves a lot of mesh. `nosub` declares no `SUBGND`, `BACKSIDEGND` or `LBE` layer,
 so those GDS layers are ignored even if they are drawn.
 
-Both scripts print the stackup and the PDK version at startup:
+Both scripts print the stackup, the PDK version and the `gds2palace` that reads the stackup at startup:
 
 ```
 Stackup:     /foss/pdks/ihp-sg13g2/libs.tech/palace/workflow/SG13G2_nosub.xml
-PDK commit:  d592520846234ec601cd80300d7377d41340b5a5
+PDK commit:  c271a7e97a7bab201c1d0a399215969d2ee19573
+gds2palace:  0.5.2 (reader 1.9.4), /usr/local/lib/python3.12/dist-packages/gds2palace
 ```
 
-Keep those two lines in the log. The stackup is the one model input this repository does not
-pin, and together they identify it exactly: the PDK commit pins the `libs.tech/palace`
-submodule, which is the stackup file itself. The hash comes from `$PDK_ROOT/$PDK/COMMIT`,
-which IIC-OSIC-TOOLS writes when it installs the PDK, so you can also read it directly:
+Keep those three lines in the log. They name the model inputs this repository does not pin. The PDK commit identifies the stackup exactly, because it pins the `libs.tech/palace` submodule, which is the stackup file itself. It does not identify the `gds2palace` that reads the file and builds the model, which is why the third line names it. The hash comes from `$PDK_ROOT/$PDK/COMMIT`, which IIC-OSIC-TOOLS writes when it installs the PDK, so you can also read it directly:
 
 ```sh
 cat $PDK_ROOT/$PDK/COMMIT
@@ -257,7 +254,7 @@ and puts every referenced layer at the wrong height. You get S-parameters, not a
 reader older than 1.7.0 on a 3.1 file fails loudly instead, because `Thickness="=air_thickness"`
 does not parse as a float.
 
-`gds2palace` comes from the container, and we do not pin it, so check before switching:
+`gds2palace` comes from the container's pip install, not from the PDK, and we do not pin it, so check before switching:
 
 ```sh
 python3 -c "import gds2palace as g; r = g.stackup_reader; print(
@@ -268,7 +265,7 @@ python3 -c "import gds2palace as g; r = g.stackup_reader; print(
 
 `SUPPORTED_SCHEMA_VERSION` only exists from reader 1.6.0, so `pre-3.x` in that last field
 means the reader predates the whole format and every `Reference` is about to be misread.
-gds2palace 0.4.0 ships reader 1.7.2 and handles everything.
+The 2026-09-22 image imports gds2palace 0.5.2 with reader 1.9.4, which handles everything.
 
 ## How to choose
 

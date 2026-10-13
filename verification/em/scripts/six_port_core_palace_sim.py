@@ -5,6 +5,7 @@ import re
 import sys
 import subprocess
 from gds2palace import *
+import gds2palace
 import gdspy
 import argparse
 
@@ -33,8 +34,8 @@ def _resolve_stackup(stackup):
     """Resolve the stackup XML, preferring an explicit path over the PDK's copy.
 
     The stackup files are not vendored in this repository. They ship with the PDK,
-    in the gds2palace submodule the container installs, so the model always uses the
-    same stackup as the gds2palace that reads it. See verification/em/stackups/README.md.
+    in its libs.tech/palace submodule. The gds2palace package that reads them is a
+    separate pip install in the container, see verification/em/stackups/README.md.
     """
     if os.path.sep in stackup or (os.path.altsep and os.path.altsep in stackup):
         path = os.path.abspath(stackup)
@@ -81,6 +82,17 @@ def _pdk_commit():
             return commit_file.read().strip() or "unknown (empty COMMIT file)"
     except OSError:
         return f"unknown (no {path})"
+
+
+def _gds2palace_version():
+    """Name the gds2palace that builds the model.
+
+    The container installs it with pip, separately from the PDK, so the PDK commit
+    does not identify it, and its version can differ from the PDK's own copy.
+    """
+    return (f"{getattr(gds2palace, '__version__', 'unknown')} "
+            f"(reader {getattr(stackup_reader, '__version__', 'unknown')}), "
+            f"{os.path.dirname(gds2palace.__file__)}")
 
 
 def _get_number_of_ports(gds_filename):
@@ -168,16 +180,17 @@ def _get_layers(cell, layers=None):
 args = _parse_args()
 
 gds_filename = args.gds_filename   # geometries
-# Stackup, taken from the PDK rather than vendored here, so it always matches the
-# gds2palace that reads it. SG13G2_nosub is the default because the solid Metal5 plane
-# under the TopMetal2 traces shields the silicon, so leaving the substrate out of the
-# model costs almost nothing in accuracy and saves a lot of mesh. The resolved path is
-# printed below, because it is the one model input this repository does not pin.
+# Stackup, taken from the PDK rather than vendored here. SG13G2_nosub is the default
+# because the solid Metal5 plane under the TopMetal2 traces shields the silicon, so
+# leaving the substrate out of the model costs almost nothing in accuracy and saves a
+# lot of mesh. The resolved path, the PDK commit and the gds2palace that reads the file
+# are printed below, because they are the model inputs this repository does not pin.
 # See verification/em/stackups/README.md for the other stackups and for the
 # schemaVersion 3.x caveat.
 XML_filename = _resolve_stackup(args.stackup)
 print("Stackup:    ", XML_filename)
 print("PDK commit: ", _pdk_commit())
+print("gds2palace: ", _gds2palace_version())
 
 # preprocess GDSII for safe handling of cutouts/holes. No longer required since gds2palace
 # redesigned cutout handling in August 2026, kept here so the flow also works with older
