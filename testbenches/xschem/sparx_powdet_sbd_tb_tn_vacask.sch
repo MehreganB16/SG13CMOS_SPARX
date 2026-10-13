@@ -55,7 +55,7 @@ include \\"cornerCAP.lib\\" section=cap_typ
 include \\"cornerDIO.lib\\" section=dio_tt
 "
       }
-C {simulator_commands_shown.sym} 80 -1070 0 0 {
+C {simulator_commands_shown.sym} 80 -1010 0 0 {
 name=Script_VACASK
 simulator=vacask
 only_toplevel=false

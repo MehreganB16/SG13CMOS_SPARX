@@ -5,75 +5,75 @@ V {}
 S {}
 F {}
 E {}
-T {VACASK Noise-Figure Testbench for the Receiver - Six-Port with Full-Core LE Model and Four PDs} 60 -1720 0 0 1 1 {}
+T {VACASK Noise-Figure Testbench for the Receiver - Six-Port with Full-Core LE Model and Four PDs} 100 -1720 0 0 0.9 0.9 {}
 T {SPDX-FileCopyrightText: 2026 The SPARX Team
 SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 } 1920 -220 0 0 0.4 0.4 {}
-N 1540 -760 1540 -720 {lab=GND}
-N 1780 -800 1780 -720 {lab=GND}
-N 1860 -800 1860 -720 {lab=GND}
-N 1620 -980 1660 -980 {lab=GND}
-N 1620 -900 1620 -720 {lab=GND}
-N 1620 -900 1660 -900 {lab=GND}
-N 1620 -980 1620 -900 {lab=GND}
-N 1540 -940 1540 -910 {lab=vlo}
-N 1540 -850 1540 -820 {lab=lo_src}
-N 1540 -940 1660 -940 {lab=vlo}
-N 2100 -760 2100 -720 {lab=GND}
-N 2100 -940 2100 -910 {lab=vrf}
-N 2100 -850 2100 -820 {lab=rf_src}
-N 1980 -980 2020 -980 {lab=GND}
-N 2020 -900 2020 -720 {lab=GND}
-N 1980 -900 2020 -900 {lab=GND}
-N 2020 -980 2020 -900 {lab=GND}
-N 1980 -940 2100 -940 {lab=vrf}
-N 1340 -1020 1340 -980 {lab=GND}
-N 1340 -1120 1340 -1080 {lab=VDD}
-N 1740 -800 1740 -760 {lab=vout3}
-N 1700 -800 1700 -780 {lab=vref3}
-N 1900 -800 1900 -760 {lab=vout4}
-N 1940 -800 1940 -780 {lab=vref4}
-N 1820 -800 1820 -760 {lab=VDD}
-N 1780 -1160 1780 -1080 {lab=GND}
-N 1860 -1160 1860 -1080 {lab=GND}
-N 1740 -1120 1740 -1080 {lab=vout1}
-N 1700 -1100 1700 -1080 {lab=vref1}
-N 1900 -1120 1900 -1080 {lab=vout2}
-N 1940 -1100 1940 -1080 {lab=vref2}
-N 1820 -1120 1820 -1080 {lab=VDD}
-N 1860 -620 1860 -580 {lab=vout1}
-N 1860 -520 1860 -480 {lab=GND}
-N 1980 -620 1980 -580 {lab=vout2}
-N 1980 -520 1980 -480 {lab=GND}
-N 2100 -620 2100 -580 {lab=vout3}
-N 2100 -520 2100 -480 {lab=GND}
-N 2220 -620 2220 -580 {lab=vout4}
-N 2220 -520 2220 -480 {lab=GND}
-N 1860 -420 1860 -380 {lab=vref1}
-N 1860 -320 1860 -280 {lab=GND}
-N 1980 -420 1980 -380 {lab=vref2}
-N 1980 -320 1980 -280 {lab=GND}
-N 2100 -420 2100 -380 {lab=vref3}
-N 2100 -320 2100 -280 {lab=GND}
-N 2220 -420 2220 -380 {lab=vref4}
-N 2220 -320 2220 -280 {lab=GND}
-N 1360 -620 1360 -580 {lab=out1}
-N 1360 -520 1360 -480 {lab=GND}
-N 1280 -570 1320 -570 {lab=vout1}
-N 1280 -530 1320 -530 {lab=vref1}
-N 1360 -420 1360 -380 {lab=out2}
-N 1360 -320 1360 -280 {lab=GND}
-N 1280 -370 1320 -370 {lab=vout2}
-N 1280 -330 1320 -330 {lab=vref2}
-N 1620 -620 1620 -580 {lab=out3}
-N 1620 -520 1620 -480 {lab=GND}
-N 1540 -570 1580 -570 {lab=vout3}
-N 1540 -530 1580 -530 {lab=vref3}
-N 1620 -420 1620 -380 {lab=out4}
-N 1620 -320 1620 -280 {lab=GND}
-N 1540 -370 1580 -370 {lab=vout4}
-N 1540 -330 1580 -330 {lab=vref4}
-C {simulator_commands_shown.sym} 60 -1530 0 0 {name=Script_VACASK
+N 1000 -780 1000 -740 {lab=GND}
+N 1240 -820 1240 -740 {lab=GND}
+N 1320 -820 1320 -740 {lab=GND}
+N 1080 -1000 1120 -1000 {lab=GND}
+N 1080 -920 1080 -740 {lab=GND}
+N 1080 -920 1120 -920 {lab=GND}
+N 1080 -1000 1080 -920 {lab=GND}
+N 1000 -960 1000 -930 {lab=vlo}
+N 1000 -870 1000 -840 {lab=lo_src}
+N 1000 -960 1120 -960 {lab=vlo}
+N 1560 -780 1560 -740 {lab=GND}
+N 1560 -960 1560 -930 {lab=vrf}
+N 1560 -870 1560 -840 {lab=rf_src}
+N 1440 -1000 1480 -1000 {lab=GND}
+N 1480 -920 1480 -740 {lab=GND}
+N 1440 -920 1480 -920 {lab=GND}
+N 1480 -1000 1480 -920 {lab=GND}
+N 1440 -960 1560 -960 {lab=vrf}
+N 800 -1040 800 -1000 {lab=GND}
+N 800 -1140 800 -1100 {lab=VDD}
+N 1200 -820 1200 -780 {lab=vout3}
+N 1160 -820 1160 -800 {lab=vref3}
+N 1360 -820 1360 -780 {lab=vout4}
+N 1400 -820 1400 -800 {lab=vref4}
+N 1280 -820 1280 -780 {lab=VDD}
+N 1240 -1180 1240 -1100 {lab=GND}
+N 1320 -1180 1320 -1100 {lab=GND}
+N 1200 -1140 1200 -1100 {lab=vout1}
+N 1160 -1120 1160 -1100 {lab=vref1}
+N 1360 -1140 1360 -1100 {lab=vout2}
+N 1400 -1120 1400 -1100 {lab=vref2}
+N 1280 -1140 1280 -1100 {lab=VDD}
+N 1320 -640 1320 -600 {lab=vout1}
+N 1320 -540 1320 -500 {lab=GND}
+N 1440 -640 1440 -600 {lab=vout2}
+N 1440 -540 1440 -500 {lab=GND}
+N 1560 -640 1560 -600 {lab=vout3}
+N 1560 -540 1560 -500 {lab=GND}
+N 1680 -640 1680 -600 {lab=vout4}
+N 1680 -540 1680 -500 {lab=GND}
+N 1320 -440 1320 -400 {lab=vref1}
+N 1320 -340 1320 -300 {lab=GND}
+N 1440 -440 1440 -400 {lab=vref2}
+N 1440 -340 1440 -300 {lab=GND}
+N 1560 -440 1560 -400 {lab=vref3}
+N 1560 -340 1560 -300 {lab=GND}
+N 1680 -440 1680 -400 {lab=vref4}
+N 1680 -340 1680 -300 {lab=GND}
+N 820 -640 820 -600 {lab=out1}
+N 820 -540 820 -500 {lab=GND}
+N 740 -590 780 -590 {lab=vout1}
+N 740 -550 780 -550 {lab=vref1}
+N 820 -440 820 -400 {lab=out2}
+N 820 -340 820 -300 {lab=GND}
+N 740 -390 780 -390 {lab=vout2}
+N 740 -350 780 -350 {lab=vref2}
+N 1080 -640 1080 -600 {lab=out3}
+N 1080 -540 1080 -500 {lab=GND}
+N 1000 -590 1040 -590 {lab=vout3}
+N 1000 -550 1040 -550 {lab=vref3}
+N 1080 -440 1080 -400 {lab=out4}
+N 1080 -340 1080 -300 {lab=GND}
+N 1000 -390 1040 -390 {lab=vout4}
+N 1000 -350 1040 -350 {lab=vref4}
+C {simulator_commands.sym} 210 -1520 0 0 {name=Script_VACASK
 simulator=vacask
 only_toplevel=false
 value="
@@ -216,109 +216,109 @@ write_data [save_params] $netlist_dir/[file rootname [file tail [xschem get curr
 xschem netlist
 simulate
 "}
-C {devices/vsource.sym} 1540 -790 0 1 {name=vlo value="type=\\"sine\\" sinedc=0 ampl=0 freq="freq_lo""}
-C {devices/res.sym} 1540 -880 0 0 {name=Rlo value=50}
-C {devices/lab_pin.sym} 1540 -850 0 0 {name=pl1 sig_type=std_logic lab=lo_src}
-C {lab_pin.sym} 1740 -760 0 0 {name=p4 sig_type=std_logic lab=vout3}
-C {devices/gnd.sym} 1780 -720 0 1 {name=l5 lab=GND}
-C {devices/gnd.sym} 1860 -720 0 0 {name=l7 lab=GND}
-C {devices/gnd.sym} 1540 -720 0 1 {name=l6 lab=GND}
-C {devices/vsource.sym} 2100 -790 0 0 {name=vrf value="type=\\"sine\\" sinedc=0 ampl=0 freq="freq_rf" spur=\{[1]\} smag=[1]"}
-C {devices/res.sym} 2100 -880 0 0 {name=Rrf value=50}
-C {devices/lab_pin.sym} 2100 -850 0 0 {name=pl2 sig_type=std_logic lab=rf_src}
-C {devices/gnd.sym} 1620 -720 0 1 {name=l3 lab=GND}
-C {devices/gnd.sym} 2100 -720 0 0 {name=l4 lab=GND}
-C {devices/gnd.sym} 2020 -720 0 0 {name=l10 lab=GND}
-C {devices/vsource.sym} 1340 -1050 0 0 {name=VDD value="dc=1.5"}
-C {devices/gnd.sym} 1340 -980 0 0 {name=l1 lab=GND}
-C {capa.sym} 1860 -550 0 1 {name=C1
+C {devices/vsource.sym} 1000 -810 0 1 {name=vlo value="type=\\"sine\\" sinedc=0 ampl=0 freq="freq_lo""}
+C {devices/res.sym} 1000 -900 0 0 {name=Rlo value=50}
+C {devices/lab_pin.sym} 1000 -870 0 0 {name=pl1 sig_type=std_logic lab=lo_src}
+C {lab_pin.sym} 1200 -780 0 0 {name=p4 sig_type=std_logic lab=vout3}
+C {devices/gnd.sym} 1240 -740 0 1 {name=l5 lab=GND}
+C {devices/gnd.sym} 1320 -740 0 0 {name=l7 lab=GND}
+C {devices/gnd.sym} 1000 -740 0 1 {name=l6 lab=GND}
+C {devices/vsource.sym} 1560 -810 0 0 {name=vrf value="type=\\"sine\\" sinedc=0 ampl=0 freq="freq_rf" spur=\{[1]\} smag=[1]"}
+C {devices/res.sym} 1560 -900 0 0 {name=Rrf value=50}
+C {devices/lab_pin.sym} 1560 -870 0 0 {name=pl2 sig_type=std_logic lab=rf_src}
+C {devices/gnd.sym} 1080 -740 0 1 {name=l3 lab=GND}
+C {devices/gnd.sym} 1560 -740 0 0 {name=l4 lab=GND}
+C {devices/gnd.sym} 1480 -740 0 0 {name=l10 lab=GND}
+C {devices/vsource.sym} 800 -1070 0 0 {name=VDD value="dc=1.5"}
+C {devices/gnd.sym} 800 -1000 0 0 {name=l1 lab=GND}
+C {capa.sym} 1320 -570 0 1 {name=C1
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 1860 -480 0 0 {name=l11 lab=GND}
-C {vdd.sym} 1340 -1120 0 0 {name=l12 lab=VDD}
-C {lab_pin.sym} 1540 -940 0 0 {name=p1 sig_type=std_logic lab=vlo}
-C {lab_pin.sym} 2100 -940 0 1 {name=Vrf1 sig_type=std_logic lab=vrf}
-C {lab_pin.sym} 1700 -780 0 0 {name=p2 sig_type=std_logic lab=vref3}
-C {lab_pin.sym} 1900 -760 0 1 {name=p3 sig_type=std_logic lab=vout4}
-C {lab_pin.sym} 1940 -780 0 1 {name=p5 sig_type=std_logic lab=vref4}
-C {vdd.sym} 1820 -760 2 0 {name=l14 lab=VDD}
-C {lab_pin.sym} 1740 -1120 2 1 {name=p6 sig_type=std_logic lab=vout1}
-C {devices/gnd.sym} 1780 -1160 2 0 {name=l8 lab=GND}
-C {devices/gnd.sym} 1860 -1160 2 1 {name=l9 lab=GND}
-C {lab_pin.sym} 1700 -1100 2 1 {name=p7 sig_type=std_logic lab=vref1}
-C {lab_pin.sym} 1900 -1120 2 0 {name=p8 sig_type=std_logic lab=vout2}
-C {lab_pin.sym} 1940 -1100 2 0 {name=p9 sig_type=std_logic lab=vref2}
-C {vdd.sym} 1820 -1120 0 1 {name=l13 lab=VDD}
-C {capa.sym} 1980 -550 0 1 {name=C2
+C {devices/gnd.sym} 1320 -500 0 0 {name=l11 lab=GND}
+C {vdd.sym} 800 -1140 0 0 {name=l12 lab=VDD}
+C {lab_pin.sym} 1000 -960 0 0 {name=p1 sig_type=std_logic lab=vlo}
+C {lab_pin.sym} 1560 -960 0 1 {name=Vrf1 sig_type=std_logic lab=vrf}
+C {lab_pin.sym} 1160 -800 0 0 {name=p2 sig_type=std_logic lab=vref3}
+C {lab_pin.sym} 1360 -780 0 1 {name=p3 sig_type=std_logic lab=vout4}
+C {lab_pin.sym} 1400 -800 0 1 {name=p5 sig_type=std_logic lab=vref4}
+C {vdd.sym} 1280 -780 2 0 {name=l14 lab=VDD}
+C {lab_pin.sym} 1200 -1140 2 1 {name=p6 sig_type=std_logic lab=vout1}
+C {devices/gnd.sym} 1240 -1180 2 0 {name=l8 lab=GND}
+C {devices/gnd.sym} 1320 -1180 2 1 {name=l9 lab=GND}
+C {lab_pin.sym} 1160 -1120 2 1 {name=p7 sig_type=std_logic lab=vref1}
+C {lab_pin.sym} 1360 -1140 2 0 {name=p8 sig_type=std_logic lab=vout2}
+C {lab_pin.sym} 1400 -1120 2 0 {name=p9 sig_type=std_logic lab=vref2}
+C {vdd.sym} 1280 -1140 0 1 {name=l13 lab=VDD}
+C {capa.sym} 1440 -570 0 1 {name=C2
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 1980 -480 0 0 {name=l15 lab=GND}
-C {capa.sym} 2100 -550 0 1 {name=C3
+C {devices/gnd.sym} 1440 -500 0 0 {name=l15 lab=GND}
+C {capa.sym} 1560 -570 0 1 {name=C3
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 2100 -480 0 0 {name=l16 lab=GND}
-C {capa.sym} 2220 -550 0 1 {name=C4
+C {devices/gnd.sym} 1560 -500 0 0 {name=l16 lab=GND}
+C {capa.sym} 1680 -570 0 1 {name=C4
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 2220 -480 0 0 {name=l17 lab=GND}
-C {lab_pin.sym} 1860 -620 2 1 {name=p10 sig_type=std_logic lab=vout1}
-C {lab_pin.sym} 1980 -620 2 1 {name=p11 sig_type=std_logic lab=vout2}
-C {lab_pin.sym} 2100 -620 0 0 {name=p12 sig_type=std_logic lab=vout3}
-C {lab_pin.sym} 2220 -620 0 0 {name=p13 sig_type=std_logic lab=vout4}
-C {capa.sym} 1860 -350 0 1 {name=C5
+C {devices/gnd.sym} 1680 -500 0 0 {name=l17 lab=GND}
+C {lab_pin.sym} 1320 -640 2 1 {name=p10 sig_type=std_logic lab=vout1}
+C {lab_pin.sym} 1440 -640 2 1 {name=p11 sig_type=std_logic lab=vout2}
+C {lab_pin.sym} 1560 -640 0 0 {name=p12 sig_type=std_logic lab=vout3}
+C {lab_pin.sym} 1680 -640 0 0 {name=p13 sig_type=std_logic lab=vout4}
+C {capa.sym} 1320 -370 0 1 {name=C5
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 1860 -280 0 0 {name=l18 lab=GND}
-C {capa.sym} 1980 -350 0 1 {name=C6
+C {devices/gnd.sym} 1320 -300 0 0 {name=l18 lab=GND}
+C {capa.sym} 1440 -370 0 1 {name=C6
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 1980 -280 0 0 {name=l19 lab=GND}
-C {capa.sym} 2100 -350 0 1 {name=C7
+C {devices/gnd.sym} 1440 -300 0 0 {name=l19 lab=GND}
+C {capa.sym} 1560 -370 0 1 {name=C7
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 2100 -280 0 0 {name=l20 lab=GND}
-C {capa.sym} 2220 -350 0 1 {name=C8
+C {devices/gnd.sym} 1560 -300 0 0 {name=l20 lab=GND}
+C {capa.sym} 1680 -370 0 1 {name=C8
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
-C {devices/gnd.sym} 2220 -280 0 0 {name=l21 lab=GND}
-C {lab_pin.sym} 1860 -420 2 1 {name=p14 sig_type=std_logic lab=vref1}
-C {lab_pin.sym} 1980 -420 2 1 {name=p15 sig_type=std_logic lab=vref2}
-C {lab_pin.sym} 2100 -420 0 0 {name=p16 sig_type=std_logic lab=vref3}
-C {lab_pin.sym} 2220 -420 0 0 {name=p17 sig_type=std_logic lab=vref4}
-C {vcvs.sym} 1360 -550 0 0 {name=E1 value=1}
-C {lab_pin.sym} 1360 -620 0 1 {name=p18 sig_type=std_logic lab=out1}
-C {devices/gnd.sym} 1360 -480 0 0 {name=l22 lab=GND}
-C {lab_pin.sym} 1280 -570 0 0 {name=p19 sig_type=std_logic lab=vout1}
-C {lab_pin.sym} 1280 -530 0 0 {name=p20 sig_type=std_logic lab=vref1}
-C {vcvs.sym} 1360 -350 0 0 {name=E2 value=1}
-C {lab_pin.sym} 1360 -420 0 1 {name=p21 sig_type=std_logic lab=out2}
-C {devices/gnd.sym} 1360 -280 0 0 {name=l23 lab=GND}
-C {lab_pin.sym} 1280 -370 0 0 {name=p22 sig_type=std_logic lab=vout2}
-C {lab_pin.sym} 1280 -330 0 0 {name=p23 sig_type=std_logic lab=vref2}
-C {vcvs.sym} 1620 -550 0 0 {name=E3 value=1}
-C {lab_pin.sym} 1620 -620 0 1 {name=p24 sig_type=std_logic lab=out3}
-C {devices/gnd.sym} 1620 -480 0 0 {name=l24 lab=GND}
-C {lab_pin.sym} 1540 -570 0 0 {name=p25 sig_type=std_logic lab=vout3}
-C {lab_pin.sym} 1540 -530 0 0 {name=p26 sig_type=std_logic lab=vref3}
-C {vcvs.sym} 1620 -350 0 0 {name=E4 value=1}
-C {lab_pin.sym} 1620 -420 0 1 {name=p27 sig_type=std_logic lab=out4}
-C {devices/gnd.sym} 1620 -280 0 0 {name=l25 lab=GND}
-C {lab_pin.sym} 1540 -370 0 0 {name=p28 sig_type=std_logic lab=vout4}
-C {lab_pin.sym} 1540 -330 0 0 {name=p29 sig_type=std_logic lab=vref4}
-C {sparx_top_le.sym} 1820 -940 0 0 {name=x1}
+C {devices/gnd.sym} 1680 -300 0 0 {name=l21 lab=GND}
+C {lab_pin.sym} 1320 -440 2 1 {name=p14 sig_type=std_logic lab=vref1}
+C {lab_pin.sym} 1440 -440 2 1 {name=p15 sig_type=std_logic lab=vref2}
+C {lab_pin.sym} 1560 -440 0 0 {name=p16 sig_type=std_logic lab=vref3}
+C {lab_pin.sym} 1680 -440 0 0 {name=p17 sig_type=std_logic lab=vref4}
+C {vcvs.sym} 820 -570 0 0 {name=E1 value=1}
+C {lab_pin.sym} 820 -640 0 1 {name=p18 sig_type=std_logic lab=out1}
+C {devices/gnd.sym} 820 -500 0 0 {name=l22 lab=GND}
+C {lab_pin.sym} 740 -590 0 0 {name=p19 sig_type=std_logic lab=vout1}
+C {lab_pin.sym} 740 -550 0 0 {name=p20 sig_type=std_logic lab=vref1}
+C {vcvs.sym} 820 -370 0 0 {name=E2 value=1}
+C {lab_pin.sym} 820 -440 0 1 {name=p21 sig_type=std_logic lab=out2}
+C {devices/gnd.sym} 820 -300 0 0 {name=l23 lab=GND}
+C {lab_pin.sym} 740 -390 0 0 {name=p22 sig_type=std_logic lab=vout2}
+C {lab_pin.sym} 740 -350 0 0 {name=p23 sig_type=std_logic lab=vref2}
+C {vcvs.sym} 1080 -570 0 0 {name=E3 value=1}
+C {lab_pin.sym} 1080 -640 0 1 {name=p24 sig_type=std_logic lab=out3}
+C {devices/gnd.sym} 1080 -500 0 0 {name=l24 lab=GND}
+C {lab_pin.sym} 1000 -590 0 0 {name=p25 sig_type=std_logic lab=vout3}
+C {lab_pin.sym} 1000 -550 0 0 {name=p26 sig_type=std_logic lab=vref3}
+C {vcvs.sym} 1080 -370 0 0 {name=E4 value=1}
+C {lab_pin.sym} 1080 -440 0 1 {name=p27 sig_type=std_logic lab=out4}
+C {devices/gnd.sym} 1080 -300 0 0 {name=l25 lab=GND}
+C {lab_pin.sym} 1000 -390 0 0 {name=p28 sig_type=std_logic lab=vout4}
+C {lab_pin.sym} 1000 -350 0 0 {name=p29 sig_type=std_logic lab=vref4}
+C {sparx_top_le.sym} 1280 -960 0 0 {name=x1}

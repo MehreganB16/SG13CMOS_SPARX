@@ -5,7 +5,7 @@ V {}
 S {}
 F {}
 E {}
-T {VACASK Transient-Noise Testbench for the Receiver - Six-Port with Full-Core LE Model and Four PDs} 60 -1720 0 0 1 1 {}
+T {VACASK Transient-Noise Testbench for the Receiver - Six-Port with Full-Core LE Model and Four PDs} 60 -1720 0 0 0.9 0.9 {}
 T {SPDX-FileCopyrightText: 2026 The SPARX Team
 SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 } 1920 -220 0 0 0.4 0.4 {}
@@ -27,8 +27,8 @@ N 2020 -900 2020 -720 {lab=GND}
 N 1980 -900 2020 -900 {lab=GND}
 N 2020 -980 2020 -900 {lab=GND}
 N 1980 -940 2100 -940 {lab=vrf}
-N 1340 -1020 1340 -980 {lab=GND}
-N 1340 -1120 1340 -1080 {lab=VDD}
+N 1540 -1060 1540 -1020 {lab=GND}
+N 1540 -1160 1540 -1120 {lab=VDD}
 N 1740 -800 1740 -760 {lab=vout3}
 N 1700 -800 1700 -780 {lab=vref3}
 N 1900 -800 1900 -760 {lab=vout4}
@@ -160,15 +160,15 @@ C {devices/lab_pin.sym} 2100 -850 0 0 {name=pl2 sig_type=std_logic lab=rf_src}
 C {devices/gnd.sym} 1620 -720 0 1 {name=l3 lab=GND}
 C {devices/gnd.sym} 2100 -720 0 0 {name=l4 lab=GND}
 C {devices/gnd.sym} 2020 -720 0 0 {name=l10 lab=GND}
-C {devices/vsource.sym} 1340 -1050 0 0 {name=VDD value="dc=1.5"}
-C {devices/gnd.sym} 1340 -980 0 0 {name=l1 lab=GND}
+C {devices/vsource.sym} 1540 -1090 0 0 {name=VDD value="dc=1.5"}
+C {devices/gnd.sym} 1540 -1020 0 0 {name=l1 lab=GND}
 C {capa.sym} 1860 -550 0 1 {name=C1
 m=1
 value=5p
 footprint=1206
 device="ceramic capacitor"}
 C {devices/gnd.sym} 1860 -480 0 0 {name=l11 lab=GND}
-C {vdd.sym} 1340 -1120 0 0 {name=l12 lab=VDD}
+C {vdd.sym} 1540 -1160 0 0 {name=l12 lab=VDD}
 C {lab_pin.sym} 1540 -940 0 0 {name=p1 sig_type=std_logic lab=vlo}
 C {lab_pin.sym} 2100 -940 0 1 {name=Vrf1 sig_type=std_logic lab=vrf}
 C {lab_pin.sym} 1700 -780 0 0 {name=p2 sig_type=std_logic lab=vref3}

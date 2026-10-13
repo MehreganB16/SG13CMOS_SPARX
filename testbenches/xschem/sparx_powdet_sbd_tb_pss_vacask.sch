@@ -5,7 +5,7 @@ V {}
 S {}
 F {}
 E {}
-T {VACASK PSS (single-tone HB) Testbench for the SBD-Based Power Detector} 290 -1700 0 0 1 1 {}
+T {VACASK PSS (single-tone HB) Testbench for the SBD-Based Power Detector} 260 -1700 0 0 1 1 {}
 T {SPDX-FileCopyrightText: 2025-2026 The SPARX Team
 SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 } 1920 -220 0 0 0.4 0.4 {}

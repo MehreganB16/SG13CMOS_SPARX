@@ -77,7 +77,7 @@ unitx=1
 logx=0
 logy=0
 linewidth_mult=4}
-T {Ngspice Testbench for Transient analysis - Six-Port} 550 -1710 0 0 1 1 {}
+T {Ngspice Testbench for Transient analysis - Six-Port} 600 -1720 0 0 1 1 {}
 T {SPDX-FileCopyrightText: 2025-2026 The SPARX Team
 SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 } 1920 -220 0 0 0.4 0.4 {}
@@ -129,7 +129,7 @@ N 2160 -870 2160 -830 {lab=vref3}
 N 2160 -770 2160 -730 {lab=GND}
 N 2280 -870 2280 -830 {lab=vref4}
 N 2280 -770 2280 -730 {lab=GND}
-C {devices/code_shown.sym} 60 -1530 0 0 {name=NGSPICE
+C {devices/code_shown.sym} 40 -1670 0 0 {name=NGSPICE
 only_toplevel=true
 lock=false
 value="
