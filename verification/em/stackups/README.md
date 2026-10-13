@@ -11,7 +11,8 @@ only.
 ## Where they are
 
 ```
-$PDK_ROOT/$PDK/libs.tech/palace/workflow/*.xml                    the production stackups
+$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/*.xml          the production stackups (workflow/*.xml in older PDKs)
+$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/latest/IHP/*.xml      upstream's schemaVersion 3.1 successors, newer PDKs only
 $PDK_ROOT/$PDK/libs.tech/palace/more_examples/                    resistors, thermal, format examples
 $PDK_ROOT/$PDK/libs.tech/palace/doc/XML_stackup_format/           the format reference
 ```
@@ -25,10 +26,12 @@ gds2palace 0.4.0 (reader 1.7.2), which reads every schema version below. `ihp-sg
 `libs.tech/palace` at all, which is why the SG13CMOS5L stackups below come from the SG13G2
 side.
 
+Upstream moved the production stackups from `workflow/` to `XML_stackup/legacy/` on 2026-09-26, byte for byte unchanged, and added schemaVersion 3.1 successors in `XML_stackup/latest/IHP/`, which need gds2palace 0.5.0 or newer. Which folder holds the production files therefore depends on the gds2palace the PDK pins, so both scripts look in `XML_stackup/legacy/` first and in `workflow/` second.
+
 To list what your container actually has:
 
 ```sh
-ls $PDK_ROOT/$PDK/libs.tech/palace/workflow/*.xml
+ls $PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/*.xml $PDK_ROOT/$PDK/libs.tech/palace/workflow/*.xml 2>/dev/null
 ```
 
 ## Which one SPARX uses
@@ -177,7 +180,7 @@ which one a file uses.
 | `3.0` | `Reference`/`ReferenceEdge` on `<Dielectric>` and `<Layer>`, `<DerivedLayers>`, thermal `<Tables>`. | `util_stackup_reader.py` 1.6.0 or newer. |
 | `3.1` | `<Variables>` and `=`-expressions in any attribute value, plus the `variable_overrides` argument to `read_substrate()`. | `util_stackup_reader.py` 1.7.0 or newer. |
 
-Every file in `workflow/` is still `2.0`. The 3.x ones live under `more_examples/`.
+Every production file (`XML_stackup/legacy/`, `workflow/` in older PDKs) is still `2.0`. The 3.x ones live under `more_examples/` and, in newer PDKs, `XML_stackup/latest/IHP/`.
 
 ### Reference-relative positioning, 3.0
 

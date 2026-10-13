@@ -521,7 +521,7 @@ make sparx-core                          # seven-port core: EM, copy, fit, bench
 
 | Setting | Value |
 | :--- | :--- |
-| Process stackup | `SG13G2_nosub.xml` from `$PDK_ROOT/$PDK/libs.tech/palace/workflow/`, not vendored |
+| Process stackup | `SG13G2_nosub.xml` from `$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/` (`workflow/` in older PDKs), not vendored |
 | Ports | TopMetal2 signal over Metal5 ground, 50 $\Omega$ (`SIGNAL_CROSS_SECTION`, `GROUND_CROSS_SECTION`, `Z0`) |
 | Frequency sweep | 80 GHz to 240 GHz in 1.6 GHz steps, 101 points, adaptive sweep tolerance 0.02 |
 | Element order | 2 |

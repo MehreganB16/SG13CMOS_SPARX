@@ -24,7 +24,8 @@ def _parse_args():
     parser.add_argument("--Z0", type=float, default=None, help="Reference impedance of the ports in Ohms (default: from the file name)")
     parser.add_argument("--stackup", type=str, default="SG13G2_nosub.xml",
                         help="Stackup XML, either a bare name resolved against the PDK's "
-                             "libs.tech/palace/workflow, or a path (default: SG13G2_nosub.xml)")
+                             "libs.tech/palace/XML_stackup/legacy (workflow in older PDKs), "
+                             "or a path (default: SG13G2_nosub.xml)")
     return parser.parse_args()
 
 
@@ -48,14 +49,19 @@ def _resolve_stackup(stackup):
             "IIC-OSIC-TOOLS, or pass a path with --stackup."
         )
     pdk = os.environ.get("PDK", "ihp-sg13g2")
-    path = os.path.join(pdk_root, pdk, "libs.tech", "palace", "workflow", stackup)
-    if not os.path.isfile(path):
-        raise SystemExit(
-            f"ERROR: stackup not found: {path}" + os.linesep
-            + "       The PDK ships them in libs.tech/palace/workflow. "
-              "Check PDK_ROOT/PDK, or pass a path with --stackup."
-        )
-    return path
+    palace_dir = os.path.join(pdk_root, pdk, "libs.tech", "palace")
+    # gds2palace moved its stackups unchanged from workflow/ to XML_stackup/legacy/ on
+    # 2026-09-26, so which folder holds them depends on the gds2palace the PDK pins.
+    candidates = [os.path.join(palace_dir, "XML_stackup", "legacy", stackup),
+                  os.path.join(palace_dir, "workflow", stackup)]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    raise SystemExit(
+        "ERROR: stackup not found in" + os.linesep
+        + os.linesep.join("       " + path for path in candidates) + os.linesep
+        + "       Check PDK_ROOT/PDK, or pass a path with --stackup."
+    )
 
 
 def _pdk_commit():
