@@ -1,2 +1,2 @@
-This folder contains all files for the IEEE SSCS Open-Source Ecosystem “Code-a-Chip” Travel Grant Awards at [VLSI'26](https://www.vlsisymposium.org/).
+This folder contains all files for the IEEE SSCS Open-Source Ecosystem “Code-a-Chip” Travel Grant Awards at [ISSCC'27](https://www.isscc.org/).
 - Official submission repo: https://github.com/sscs-ose/sscs-ose-code-a-chip.github.io

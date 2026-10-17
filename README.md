@@ -12,7 +12,7 @@
 Institute for Integrated Circuits and Quantum Computing, Johannes Kepler University (JKU), Linz, Austria
 
 > [!IMPORTANT]
-> This repository requires the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) container with tag `2026.07` or later.
+> This repository requires the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) container with tag `2026.10` or later.
 
 > [!TIP]
 > This repository is based on the [ihp-sg13g2-ams-chip-template](https://github.com/iic-jku/ihp-sg13g2-ams-chip-template) template repository and has been extended with electromagnetic (EM) simulations using the tool AWS Palace. For a better understanding of the folder structure, how to use the Makefiles, and how to implement your own designs, it is recommended to go through this [tutorial](https://iic-jku.github.io/ihp-sg13g2-ams-chip-template/index.html).
@@ -22,10 +22,10 @@ Institute for Integrated Circuits and Quantum Computing, Johannes Kepler Univers
 
 <p align="center">
   <a href="doc/fig/sparx160/sparx160_top_black_pinout.png">
-    <img src="doc/fig/sparx160/sparx160_top_black_pinout.png" alt="Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 mm × 1.4 mm)" width=70%>
+    <img src="doc/fig/sparx160/sparx160_top_black_pinout.png" alt="Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 × 1.4 mm²)" width=70%>
   </a>
   <br>
-  <em>Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 mm × 1.4 mm).</em>
+  <em>Chip render of the ihp-sg13cmos six-port receiver for 160 GHz with M5 GND plane and pinout (1 × 1.4 mm²).</em>
 </p>
 
 
@@ -34,16 +34,18 @@ Institute for Integrated Circuits and Quantum Computing, Johannes Kepler Univers
 | Parameter           | Value                                                                             |
 | ------------------- | --------------------------------------------------------------------------------- |
 | Technology          | IHP SG13CMOS (130 nm CMOS)                                                        |
-| Die Area            | 1000 × 1400 µm (1.4 mm²)                                                          |
+| Die Area            | 1 × 1.4 mm²                                                                       |
 | Supply Voltage      | 1.5 V                                                                             |
 
 
 ## Documentation
 
 > [!IMPORTANT]
-> This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible.
+> This work has been accepted for publication at the 2026 IEEE Nordic Circuits and Systems Conference (NorCAS).
+>
+> © 2026 IEEE. Personal use of this material is permitted. Permission from IEEE must be obtained for all other uses, in any current or future media, including reprinting/republishing this material for advertising or promotional purposes, creating new collective works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work in other works.
 
-The full documentation of SPARX is available [here](https://iic-jku.github.io/SG13CMOS_SPARX/index.html) (WIP).
+The full documentation of SPARX is available [here](https://iic-jku.github.io/SG13CMOS_SPARX/index.html).
 
 
 ## Overview
@@ -124,6 +126,9 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 
 ## Directory Structure
 
+<details>
+<summary>Show Directory Structure</summary>
+
 ```text
 📁 SG13CMOS_SPARX/
 ├─ 📁 .github/
@@ -154,8 +159,8 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 │  │  ├─ sparx_powdet_sbd_klayout.cir
 │  │  └─ sparx_powdet_sbd_magic.ext.spc
 │  ├─ 📁 pex/
-│  │  ├─ sparx_powdet_sbd_klayout_pex.spice
-│  │  └─ sparx_powdet_sbd_magic_pex.spice
+│  │  ├─ sparx_powdet_sbd_klayout_pex_3.spice
+│  │  └─ sparx_powdet_sbd_magic_pex_3.spice
 │  ├─ 📁 schematic/
 │  │  ├─ sparx_powdet_sbd_klayout.cdl
 │  │  └─ sparx_powdet_sbd_magic.spice
@@ -182,6 +187,7 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 │  ├─ 📁 blender/
 │  └─ 📁 img/
 │     ├─ sparx160_top_black.png
+│     ├─ sparx160_top_black_TM2.png
 │     └─ sparx160_top_white.png
 ├─ 📁 schematic/
 │  └─ 📁 xschem/
@@ -202,14 +208,15 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 │     └─ xschemrc
 ├─ 📁 scripts/
 │  ├─ 📁 assets/
+│  ├─ check_pex_ports.py
 │  ├─ img2lay.py
-│  ├─ lay2img.py
+│  ├─ prune_pex_symbol.py
 │  ├─ six_port_gen.py
 │  └─ sparx_powdet_sbd_circuit.ipynb
 ├─ 📁 sscs-ose-code-a-chip/
 │  ├─ 📁 assets/
 │  ├─ README.md
-│  └─ SPARX_JKU_VLSI2026.ipynb
+│  └─ SPARX_JKU_ISSCC2027.ipynb
 ├─ 📁 testbenches/
 │  └─ 📁 xschem/
 │     ├─ 📁 plot_simulations/
@@ -221,6 +228,13 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 │     │  ├─ plot_n_port_tb_tran_ngspice.py
 │     │  ├─ plot_sparx_powdet_sbd_tb_hb_V-W_vacask.py
 │     │  ├─ plot_sparx_powdet_sbd_tb_hb_dBV-dBV_vacask.py
+│     │  ├─ plot_sparx_powdet_sbd_tb_nf_vacask.py
+│     │  ├─ plot_sparx_powdet_sbd_tb_pss_vacask.py
+│     │  ├─ plot_sparx_powdet_sbd_tb_tn_lo_vacask.py
+│     │  ├─ plot_sparx_powdet_sbd_tb_tn_vacask.py
+│     │  ├─ plot_sparx_top_le_tb_nf_vacask.py
+│     │  ├─ plot_sparx_top_le_tb_rx_vacask.py
+│     │  ├─ plot_sparx_top_le_tb_tn_vacask.py
 │     │  └─ sparam_plot.py
 │     ├─ sparx_blc_le_tb_acsp_ngspice.sch
 │     ├─ ...
@@ -228,6 +242,10 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 │     ├─ ...
 │     ├─ sparx_powdet_sbd_tb_ngspice.sch
 │     ├─ ...
+│     ├─ sparx_top_le_tb_nf_vacask.sch
+│     ├─ sparx_top_le_tb_rx_vacask.sch
+│     ├─ sparx_top_le_tb_tn_vacask.sch
+│     ├─ sparx_top_le_tb_tran_ngspice.sch
 │     ├─ sparx_top_tb_tran_ngspice.sch
 │     ├─ sim_range.inc
 │     ├─ sim_range.spice
@@ -257,6 +275,66 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 └─ REUSE.toml
 ```
 
+</details>
+
+
+## Xschem Configuration
+
+Xschem reads exactly one `xschemrc` at start-up, and that file decides which symbol libraries are visible and where netlists and simulation output are written. This repository ships one per folder that holds schematics:
+
+| `xschemrc` | Belongs to |
+| --- | --- |
+| [`schematic/xschem/xschemrc`](schematic/xschem/xschemrc) | the six-port and power detector schematics and symbols |
+| [`testbenches/xschem/xschemrc`](testbenches/xschem/xschemrc) | the ngspice and VACASK testbenches |
+
+
+### What Every File Does
+
+Both run the same four steps, in this order:
+
+1. **Pick the PDK.** `PDK_ROOT` is probed in the usual install locations if the environment does not set it, and `PDK` falls back to `ihp-sg13g2`. The container already exports `PDK_ROOT`, and [`.designinit`](.designinit) exports `PDK`, so this step is only a safety net for an Xschem started outside that environment.
+2. **Source the PDK `xschemrc`.** `$PDK_ROOT/$PDK/libs.tech/xschem/xschemrc` brings in the IHP device symbols, the ngspice and VACASK model paths and the IHP menu. It is guarded by `[info exists PDK]` so it is read once even when the two project files are chained.
+3. **Add the project library paths.** `append_xschem_library_path_unique` appends a folder to `XSCHEM_LIBRARY_PATH` only if it is not already there, so the same folder never appears twice no matter how the files are chained. [`schematic/xschem/xschemrc`](schematic/xschem/xschemrc) puts itself and `testbenches/xschem/` on the path. [`testbenches/xschem/xschemrc`](testbenches/xschem/xschemrc) adds none of its own and gets both from the file it sources.
+4. **Pin the netlist directory.** `pin_netlist_dir` decides where `xschem netlist` and the simulators write.
+
+Both helper procedures are defined behind an `[info commands ...]` guard, so sourcing one file from the other is harmless and the order does not matter.
+
+
+### How the Files Are Chained
+
+The testbench file pulls in the schematic file:
+
+```text
+testbenches/xschem/xschemrc
+└─ source schematic/xschem/xschemrc
+```
+
+Either file therefore sees both folders, which is what lets a testbench instantiate `sparx_powdet_sbd.sym` or one of the `sparx_*_le.sym` lumped element symbols, and what lets you open a testbench from a session started in `schematic/xschem/`.
+
+
+### Where Netlists and Simulation Output Go
+
+`pin_netlist_dir` maps the folder of the schematic being netlisted to a `simulations/` folder:
+
+| Schematic lives in | `netlist_dir` |
+| --- | --- |
+| `testbenches/xschem` | `testbenches/xschem/simulations` |
+| `schematic/xschem` | `testbenches/xschem/simulations` |
+| anywhere else (a PDK example) | left at the value the `xschemrc` pinned |
+
+It runs twice: once while the `xschemrc` is read, using that file's own folder, and again through Xschem's `load_file_postprocess` hook for every schematic that is opened afterwards. The second call keeps the netlist next to its own schematic tree no matter where the session was started, so the relative includes of the testbenches, such as `.include ../../../netlist/spice/sparx_bpf_le.spice` or `.include ../../../netlist/pex/sparx_powdet_sbd_magic_pex_3.spice`, always resolve from `testbenches/xschem/simulations/`.
+
+A `set netlist_dir` passed on the Xschem command line still wins, because `--command` runs after the file is loaded. The LVS netlist targets rely on this to write into `netlist/schematic/`, and `sim-xschem` to write into `testbenches/xschem/simulations/`.
+
+Both `simulations/` folders are generated and git-ignored.
+
+
+### Which File Is Used
+
+- The Makefile targets always name one explicitly with `--rcfile`, so a target behaves the same from any working directory.
+- Starting Xschem from within one of the two folders picks up that folder's file, which is the normal interactive case.
+- `make open` starts Xschem in the file's own directory, so the same rule applies to every button of the file browser, see [Open the Design Files](#open-the-design-files).
+
 
 ## Makefile Targets
 
@@ -268,6 +346,61 @@ The default Make target is `help`, so running `make` prints usage and all availa
 make
 make help
 ```
+
+### PDK Guard
+
+Every target except `help` and `clean` needs the `ihp-sg13g2` PDK. A wrong `$PDK`, for example `ihp-sg13cmos5l`, silently mixes technologies: DRC and LVS run against the wrong rule deck, Magic reads the wrong `magicrc`, `kpex` is handed the wrong `--pdk`, and the EM flow reads its process stackup from `$PDK_ROOT/$PDK/libs.tech/palace/`. The Makefile therefore compares `$PDK` against `REQUIRED_PDK` once when it is parsed, before any target runs:
+
+```sh
+$ sak-pdk ihp-sg13cmos5l
+$ make klayout-drc
+Makefile:25: *** PDK is "ihp-sg13cmos5l", but this chip needs "ihp-sg13g2". Run `sak-pdk ihp-sg13g2` in this shell and retry, or pass REQUIRED_PDK= to skip this check.  Stop.
+```
+
+The check is a parse-time conditional at the top of the Makefile, not a prerequisite of each target, so it costs nothing and cannot be forgotten when a target is added. `help` and `clean` are exempt, so the usage text and the cleanup still work under any PDK. `open` is not exempt: it launches Xschem, KLayout and Magic, which all read the selected PDK.
+
+Switch the PDK with `sak-pdk ihp-sg13g2`, which also sets `PDKPATH`, `KLAYOUT_PATH`, `SPICE_USERINIT_DIR` and `STD_CELL_LIBRARY`. To run a single target against another PDK anyway, pass an empty `REQUIRED_PDK`:
+
+```sh
+make <target> REQUIRED_PDK=          # skip the check
+make <target> REQUIRED_PDK=<pdk>     # require a different PDK
+```
+
+### Open the Design Files
+
+Opens a file browser for this folder with `sak-open.py` from the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS), one button per design file, grouped by directory:
+
+```sh
+make open
+```
+
+Clicking a button launches the matching tool in the file's own directory, so Xschem finds its `simulations/` folder and KLayout the layouts where they belong:
+
+| File type | Tool |
+| --- | --- |
+| `.sch`, `.sym` | Xschem |
+| `.gds`, `.gds.gz`, `.oas`, `.oas.gz` | KLayout in edit mode |
+| `.mag` | Magic |
+| `.vcd`, `.fst`, `.gtkw` | GTKWave |
+| `.raw` | gaw (ngspice rawfile) |
+| `.png`, `.pdf` | the desktop's handler (`xdg-open`) |
+| `.sv`, `.svh`, `.v`, `.vh`, `.vhd`, `.vhdl`, `.spice`, `.cir`, `.sp`, `.cdl`, `.sdc`, `.lef`, `.lib`, `.tcl`, `.mk`, `.yaml`, `.json`, `.py`, `.qmd`, `.tex`, `.md` and `Makefile` | gvim |
+
+Only these types get a button. Files with any other extension (`.sh`, `.svg`, `.save`, `.inc`, `.sNp`, `.txt`, `.csv` and so on) are not listed.
+
+Schematics and symbols that belong to one design unit share a single tabbed Xschem instance instead of one process per click. The unit is the nearest ancestor holding a `Makefile`, so the whole design is one unit and the documentation under [`doc/`](doc/) another. Every tab then writes its netlists to the folder the `xschemrc` pins, see [Xschem Configuration](#xschem-configuration).
+
+The tree is rescanned every 15 s, so files a running flow produces appear on their own and are highlighted for a minute. Generated directories are skipped by default: `runs/`, `sim_build/`, `obj_dir/`, `simulations/`, `__pycache__/`, `_freeze/` and `.git/`. The Xschem `simulations/` folder is one of them, so the `.raw` files show up only with `--all`. Pass extra options with `OPEN_ARGS`:
+
+```sh
+make open OPEN_ARGS=--all                      # include the simulation outputs
+make open OPEN_ARGS="--prune palace_model"     # skip one more directory name
+```
+
+At most 400 buttons are drawn at once, because each one is an X window, and what is left out is stated at the end of the list. That cap is easy to hit with `--all`, which also pulls in the Palace meshes under `verification/em/palace_model/` and every simulation output, so narrow it with `--prune` rather than scrolling. The same target exists in [`doc/`](doc/) for the documentation sources and figures.
+
+> [!NOTE]
+> This target needs a display. Run it inside the container's VNC/noVNC desktop or over X11 forwarding. In a shell-only container it stops with `cannot open a window`. The `.png` and `.pdf` buttons hand the file to the desktop's registered handler, so those two need the full VNC/noVNC session and do not work over a bare X forward.
 
 ### Build PDK
 
@@ -291,7 +424,7 @@ make build-layout FREQ=77 NO_FILL_M5=1
 The `FREQ` parameter sets the design frequency in GHz (default: `160`). `NO_FILL=1` disables metal fill (faster for layout preview). `NO_FILL_M5=1` disables only the Metal5 ground fill.
 
 > [!NOTE]
-> The blank six-port core for EM simulation (`verification/em/layout/sparx<FREQ>_core.gds`) is generated by `verification/em/scripts/sparx_core_em_sim.py` (see `sim-sparx-core-em`), consistent with the WPD, BLC, and BPF generator scripts.
+> `build-layout` also writes the EM sub-structures of the design (BLC, WPD, BPF, and the blank six-port core, each with the Palace port markers on layers 201..207) to `verification/em/layout/`. The EM simulation targets solve exactly these files, so the EM results always match the structures instantiated in the top-level layout.
 
 ### Build Frequency Sweep Automatically
 
@@ -316,11 +449,19 @@ make build-top
 
 ### Render Top Layout
 
-Renders the top-level GDS by calling `lay2img.py` and saves the images (`<TOP>_black.png` and `<TOP>_white.png`) in the `render/img/` folder:
+Renders the top-level GDS `layout/sparx<FREQ>_top.gds` with `sak-render.py` from the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS):
 
 ```sh
 make render-gds
+make render-gds FREQ=77
 ```
+
+Three images are written to the `render/img/` folder:
+
+- `sparx<FREQ>_top_white.png` and `sparx<FREQ>_top_black.png`: all physical mask layers, on a white and on a black background.
+- `sparx<FREQ>_top_black_TM2.png`: only `TopMetal2`, `TopVia2`, the `TopMetal2` filler and `Passiv` on a black background, which shows the six-port RF structures and the pads without the Metal5 ground plane underneath.
+
+All three images are 2048 px wide and rendered with 4x oversampling. `sak-render.py` reads the layer colours from the PDK's own KLayout layer properties and crops to the drawn geometry, so the images have no border margin.
 
 ### Design Rule Check (DRC)
 
@@ -328,18 +469,21 @@ Runs DRC on the GDS layout in `layout/`. Both flows use `sak-drc.sh` and write t
 
 The `DRC_LEVEL` parameter selects the KLayout DRC level (`sak-drc.sh -l`). It is ignored by `magic-drc`, since Magic has no selectable rule decks and always runs the full rule set compiled into the PDK's Magic tech file:
 
-- `precheck` = core FEOL + BEOL manufacturing rules only (fast iteration)
-- `macro` = block-in-isolation sign-off: `precheck` plus off-grid, zero-area, and pin/label checks (default)
-- `regular` = full-chip sign-off: all checks, including density and antenna
+- `precheck` = the foundry precheck rule set and the pin checks (fast iteration)
+- `macro` = block-in-isolation sign-off: the full FEOL and BEOL rules with off-grid, angle, recommended and pin checks, without chip-level density, the extra rules and antenna (default)
+- `regular` = full-chip sign-off: all checks, including density, the extra rules and antenna
+
+For the IHP Open-PDK, `sak-drc.sh` passes `--precheck_drc --no_density --no_offgrid --no_angle --disable_extra_rules --no_recommended` for `precheck`, `--no_density --disable_extra_rules` for `macro` and `--antenna` for `regular` to the PDK's `run_drc.py`, which adds the pin checks at every level:
 
 | Check | `precheck` | `macro` _(default)_ | `regular` |
 | --- | :---: | :---: | :---: |
-| FEOL + BEOL core rules | ✓ | ✓ | ✓ |
+| Foundry precheck rule set | ✓ | ✓ | ✓ |
+| Pin / label | ✓ | ✓ | ✓ |
+| Full FEOL + BEOL rules | – | ✓ | ✓ |
 | Off-grid / angle | – | ✓ | ✓ |
-| Zero-area / geometry | – | ✓ | ✓ |
-| Pin / label | – | ✓ | ✓ |
-| Recommended / extra rules | – | – | ✓ |
-| Density (chip-level fill) | – | – | ✓ |
+| Recommended rules | – | ✓ | ✓ |
+| Extra rules | – | – | ✓ |
+| Density (full-chip fill) | – | – | ✓ |
 | Antenna | – | – | ✓ |
 
 **KLayout DRC (regular)** runs a full (`regular`) KLayout DRC on the top-level cell:
@@ -408,9 +552,40 @@ make magic-lvs
 make magic-lvs CELL=sparx_powdet_sbd
 ```
 
+### Build Xschem PEX Symbol
+
+Builds the Xschem symbol the PEX flow needs, `schematic/xschem/<CELL>_pex.sym`, from the regular cell symbol `schematic/xschem/<CELL>.sym`:
+
+```sh
+make symbol-pex CELL=sparx_powdet_sbd
+```
+
+The generated symbol is a copy of `<CELL>.sym` with two changes: `type=subcircuit` becomes `type=primitive`, and the pin boxes the extracted netlist has no port for are dropped. Everything else (the remaining pin boxes and their order, every text label, `format`, `spectre_format`, `template`, graphics) is inherited, which is exactly what the PEX flow needs:
+
+- **`type=primitive`** stops Xschem from descending into a schematic of the same name. There is no `<CELL>_pex.sch`, so the instance line is emitted as it stands and the subcircuit comes from the `.include`d PEX netlist instead.
+- **`format="@name @pinlist @symname"`** makes the instance reference `@symname`, which resolves to `<CELL>_pex`, exactly the `.subckt` name the PEX flow writes.
+- **The pin order** is what `sak-pin-reorder.py` reorders the extracted netlist to, so it has to be that of the cell symbol.
+
+`PEX_MERGED_PINS` names the supply pins that the extraction does not report as ports of their own. It is empty by default: the power detector keeps `vdd` and `vss` as separate ports in both the Magic and the KPEX extraction, so nothing is dropped and `sparx_powdet_sbd_pex.sym` carries the same five pins as `sparx_powdet_sbd.sym`. Set it for a cell whose supplies come out of the flat extraction as one node, for example two ground pins that both tap the substrate: `make magic-pex CELL=<cellname> PEX_MERGED_PINS="<pin> ..."`.
+
+[`scripts/prune_pex_symbol.py`](scripts/prune_pex_symbol.py) drops those pins and, for the same reason, every repeat of a pin name after the first: a `.subckt` port list holds one entry per net, so pads that share a supply share a port. Only the pin boxes go and every text label stays, so the generated symbol still reads as the full cell while carrying exactly the pins the netlist has a port for.
+
+`symbol-pex` runs automatically at the start of `klayout-pex` and `magic-pex`, so the symbol is rebuilt from the current `<CELL>.sym` before every extraction and cannot go stale when a pin is added, removed or renamed. Calling it by hand is only needed to refresh the symbol without re-running an extraction. Anything added to the generated file by hand is lost at the next extraction, so make the change in `<CELL>.sym` instead.
+
+If `<CELL>.sym` does not exist, the target prints a note and does nothing, which leaves the PEX targets running without a pin reorder just as before. That is the case for the default `CELL`, the generated six-port top cell `sparx160_top`, which has no hand-drawn symbol. It fails only when `<CELL>.sym` declares neither `type=subcircuit` nor `type=primitive`.
+
+> [!NOTE]
+> Every symbol in this project also carries `spectre_format="@name ( @pinlist ) @symname"`. Xschem writes that line itself whenever a symbol is built from a schematic's pin list (key `a`, `make_sym.awk`), and it is read **only** by the Spectre netlister, which is also the one that drives VACASK (`xschem.tcl` configures `vacask "$N"` as the default simulator for `netlist_type spectre`). The SPICE netlister used for ngspice ignores it, so it has no effect on the ngspice testbenches.
+> Do not strip it: without it, instances of the symbol are **silently dropped** from a Spectre/VACASK netlist and the `subckt` line of the symbol itself comes out with an empty port list, with no warning at all. Every `_vacask` testbench in this repository depends on it.
+
 ### Parasitic Extraction (PEX)
 
-Runs parasitic extraction on the GDS layout in `layout/`. The extracted SPICE netlist is written to `netlist/pex/`.
+Runs parasitic extraction on the GDS layout in `layout/`. The extracted SPICE netlist is written to `netlist/pex/`, with the extraction mode as suffix, so the three modes sit next to each other without overwriting one another:
+
+- `klayout-pex` writes `netlist/pex/<CELL>_klayout_pex_<EXT_MODE>.spice`
+- `magic-pex` writes `netlist/pex/<CELL>_magic_pex_<EXT_MODE>.spice`
+
+The committed netlists of the power detector are the full-RC ones, `sparx_powdet_sbd_magic_pex_3.spice` and `sparx_powdet_sbd_klayout_pex_3.spice`. The Magic one is what the `.include` in the ngspice testbench `sparx_powdet_sbd_tb_ngspice.sch` and the `m1_pex` variant of the VACASK power-detector testbenches (`scripts/powdet_variant.py`) read.
 
 The `EXT_MODE` parameter selects the extraction mode:
 - `1` = C-decoupled
@@ -418,11 +593,23 @@ The `EXT_MODE` parameter selects the extraction mode:
 - `3` = full-RC (default)
 
 > [!NOTE]
-> For `klayout-pex`, `EXT_MODE=1` (C-decoupled) is not yet supported by kpex and automatically falls back to `EXT_MODE=2` (CC) with a warning.
+> For `klayout-pex`, `EXT_MODE=1` (C-decoupled) is not yet supported by kpex and automatically falls back to `EXT_MODE=2` (C-coupled) with a warning.
 
 The `.subckt` name in the extracted SPICE file is `<CELL>_pex`: `magic-pex` sets it directly via the `sak-pex.sh` option `-n <CELL>_pex`, while for `klayout-pex` it is automatically renamed from `<CELL>` (kpex).
 
-If a matching Xschem symbol (`schematic/xschem/<CELL>_pex.sym`) exists, the `.subckt` pin order in the extracted SPICE file is automatically reordered with `sak-pin-reorder.py` (installed in the IIC-OSIC-TOOLS container) to match the symbol's pin positions. This ensures the PEX netlist can be used directly with the corresponding Xschem symbol for simulation.
+Both targets start by running `symbol-pex` (see above), so `schematic/xschem/<CELL>_pex.sym` always reflects the current cell symbol. If it exists, the `.subckt` pin order in the extracted SPICE file is then reordered with `sak-pin-reorder.py` (installed in the IIC-OSIC-TOOLS container) to match that symbol's pin positions. This ensures the PEX netlist can be used directly with the corresponding Xschem symbol for simulation regardless of the selected `EXT_MODE`.
+
+Both targets finish by running [`scripts/check_pex_ports.py`](scripts/check_pex_ports.py) on the netlist they just wrote. It verifies that every pin of the `.subckt` really reaches the circuit, and fails the target otherwise. Two cases are caught:
+
+- A port that is declared in the `.subckt` line but referenced by no element at all. Whatever is wired to that pin from outside is then left floating.
+- A port whose net was split into `<port>.t<n>` and `<port>.n<n>` fragments by `extresist` (`EXT_MODE=3`), where none of the fragments is connected back to the port. The pin is then dangling even though the fragments themselves are wired up.
+
+Both produce a netlist that ngspice reads without a single warning while the cell behaves completely differently in simulation, so the check is worth the two seconds it costs. It can also be run by hand on any SPICE netlist:
+
+```sh
+python3 scripts/check_pex_ports.py netlist/pex/sparx_powdet_sbd_magic_pex_3.spice
+python3 scripts/check_pex_ports.py -v netlist/pex/*.spice     # -v also prints the size of each subcircuit
+```
 
 **KLayout PEX** uses `kpex` with the Magic extraction engine (the 2.5D engine is work in progress):
 
@@ -442,9 +629,11 @@ make magic-pex CELL=sparx_powdet_sbd EXT_MODE=3
 
 For full-RC extraction (`EXT_MODE=3`), `magic-pex` additionally exposes the `sak-pex.sh` `extresist` tuning parameters. They are ignored in `EXT_MODE=1`/`2`:
 
-- `THRESHOLD` - extresist threshold in mOhm (`-t`, default `10000` = 10 Ohm)
-- `MINRES` - extresist minimum resistance in mOhm (`-r`, default `1000` = 1 Ohm)
-- `MINDELAY` - extresist minimum delay in ps (`-y`, default `1`; `0` = gate by resistance)
+- `THRESHOLD` - extresist threshold in mOhm (`-t`, default `1000` = 1 Ohm): the minimum end-to-end resistance of a net for it to be extracted at all
+- `MINRES` - extresist minimum resistance in mOhm (`-r`, default `100` = 0.1 Ohm): resistors below this are merged
+- `MINDELAY` - extresist minimum delay in ps (`-y`, default `0` = gate by resistance): the minimum RC delay of a net for its resistors to be written
+
+Magic's own defaults, which the template keeps, are `10000` / `1000` / `1`. This repository gates by resistance instead. A delay gate of 1 ps is 57 degrees at 160 GHz, and on the power detector it drops the deterministic baseband routes that matter for the transimpedance amplifier, 22 Ohm of routing in series with the feedback resistor and 6.4 Ohm per drain finger, while the RF nets stay below 0.1 Ohm end to end and never carry a resistor at any setting. `MINRES=100` keeps `extresist` from arbitrarily attaching the `vout` port to its resistor network, which `1000` does once `MINDELAY` is `0`. The extracted capacitors, which set the post-layout behaviour of the detector, do not depend on any of the three values. The `vss` network of this cell comes out different in every run: the substrate guard rings of the Schottky diodes are not tied to ground by metal, `extresist` reports `Orphaned node "vss"` for it, and the VACASK testbenches idealize that net in [`scripts/powdet_variant.py`](scripts/powdet_variant.py).
 
 ```sh
 make magic-pex CELL=sparx_powdet_sbd EXT_MODE=3 THRESHOLD=5000 MINRES=500 MINDELAY=2
@@ -471,53 +660,56 @@ make magic-verify
 
 ### EM Simulation
 
-Runs full-wave electromagnetic (EM) simulation of the passive RF structures with AWS Palace. Each target programmatically generates the structure's GDS in `verification/em/layout/`, builds the Palace model, runs the EM solve, and writes the combined Touchstone S-parameter files (raw and de-embedded) to `verification/em/palace_model/`. Use the `copy-sparam` target afterwards to copy the results to `verification/em/s-parameter/`.
+Runs full-wave electromagnetic (EM) simulation of the passive RF structures with AWS Palace. The structures themselves are generated by `build-layout` into `verification/em/layout/` (see [Build SPARX Layout](#build-sparx-layout)). Each EM target picks the matching GDS from there, builds the Palace model, runs the EM solve, and writes the combined Touchstone S-parameter files (raw and de-embedded) to `verification/em/palace_model/`. Use the `copy-sparam` target afterwards to copy the results to `verification/em/s-parameter/`.
+
+Run `make build-layout FREQ=<GHz>` before the EM targets. The GDS files, and every Palace output derived from them, are named `sparx<FREQ>_<structure>` and encode nothing but the design frequency (`sparx160_blc`, `sparx160_wpd`, `sparx160_bpf`, `sparx160_core`), so re-parametrizing a structure in `scripts/six_port_gen.py` does not rename anything. If the file for the requested frequency does not exist, the target aborts with a hint to run `build-layout` first.
 
 The following parameters are shared by all EM simulation targets:
-- `FREQ` sets the design frequency in GHz (default: `160`).
-- `SIGNAL_CROSS_SECTION` selects the signal metal layer (default: `TM2`).
-- `GROUND_CROSS_SECTION` selects the ground metal layer (default: `M5`).
-- `Z0` sets the characteristic impedance in Ohms (default: `50`).
-- `E_R` sets the relative permittivity of the substrate (default: `4.1`).
+- `FREQ` selects the structure to simulate by its design frequency in GHz (default: `160`).
+- `SIGNAL_CROSS_SECTION` sets the signal metal layer of the ports (default: `TM2`).
+- `GROUND_CROSS_SECTION` sets the ground metal layer of the ports (default: `M5`).
+- `Z0` sets the reference impedance of the ports in Ohms (default: `50`).
 - `NP` sets the number of processors used by Palace (default: `4`).
+
+`FREQ` is the only one that `build-layout` also takes as an argument. The other three are the port settings that the targets pass to `palace_sim.py`; they are not derived from the layout, so they must match `signal_cross_section`, `ground_cross_section`, and `Z0` in `scripts/six_port_gen.py`. Everything else about the structures (substrate permittivity, filter type, order, bandwidth, ripple, divider shape) is hardcoded in `scripts/six_port_gen.py`: change it there, rerun `build-layout`, and rerun the EM target.
+
+The process stackup that turns the GDS into a 3D model (materials, dielectric stack, GDS layer to z-range map) comes from the PDK, at `$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/` (`workflow/` in PDKs that pin a gds2palace from before 2026-09-26, and the drivers look in both). It is not vendored here. The `gds2palace` package that reads it is a separate pip install in IIC-OSIC-TOOLS with its own version, so both drivers print the stackup path, the PDK commit and the `gds2palace` version at startup. Both simulation targets default to `SG13G2_nosub.xml`, because the solid Metal5 plane under the TopMetal2 traces shields the silicon, so leaving the substrate out of the model costs almost nothing in accuracy and saves a lot of mesh. Pass `--stackup <name-or-path>` to use a different one. `verification/em/stackups/` holds the [documentation](verification/em/stackups/README.md): what each stackup is, where to find it, the XML format including the schemaVersion 3.0 and 3.1 additions, and how to check the reader version before using a 3.x file.
 
 **Branch-Line Coupler (BLC):**
 
 ```sh
-make sim-blc-em
-make sim-blc-em FREQ=77
-make sim-blc-em FREQ=77 Z0=50 E_R=4.1 NP=8
+make build-layout && make sim-blc-em
+make build-layout FREQ=77 && make sim-blc-em FREQ=77
+make sim-blc-em FREQ=77 NP=8
 ```
 
 **Wilkinson Power Divider (WPD):**
 
-The additional `CONFIG` parameter selects the divider configuration (`C` or `U`, default: `U`).
+The routing shape of the divider (`wpd_shape`, `C` or `U`) is set in `scripts/six_port_gen.py`.
 
 ```sh
-make sim-wpd-em
-make sim-wpd-em FREQ=77
-make sim-wpd-em FREQ=77 CONFIG=C
+make build-layout && make sim-wpd-em
+make build-layout FREQ=77 && make sim-wpd-em FREQ=77
 ```
 
 **Hairpin Coupled-Line Bandpass Filter (BPF):**
 
-The additional filter parameters are `BANDWIDTH` (filter bandwidth in GHz, default: `1`), `FILTER_TYPE` (`butter`, `cheby`, or `ellip`, default: `butter`), `FILTER_ORDER` (filter order, default: `3`), and `RIPPLE_DB` (passband ripple in dB for Chebyshev and elliptic filters, default: `3`). The 10 µm connection pieces at the filter ports are not exposed as a parameter. They are hardcoded in `sparx_bpf_em_sim.py` to match the BPF instantiation in `scripts/six_port_gen.py`.
+The filter parameters (`bandwidth`, `filter_type`, `order`, `ripple_dB`, and the 10 µm connection pieces at the filter ports) are set in `scripts/six_port_gen.py`, so that the simulated filter is the one built into the chip.
 
 ```sh
-make sim-bpf-em
-make sim-bpf-em FREQ=77 BANDWIDTH=2
-make sim-bpf-em FREQ=77 BANDWIDTH=2 FILTER_TYPE=cheby FILTER_ORDER=5 RIPPLE_DB=1
+make build-layout && make sim-bpf-em
+make build-layout FREQ=77 && make sim-bpf-em FREQ=77
 ```
 
 **Six-Port Core:**
 
-Simulates the assembled six-port core. Consistent with the WPD, BLC, and BPF flows, `sparx_core_em_sim.py` first generates `verification/em/layout/sparx<FREQ>_core.gds` (the six-port network with the seven Palace port markers, assembled exactly as in `six_port_gen.py`). Since the core filename does not encode the EM parameters, the target passes them to `palace_sim.py` explicitly.
+Simulates the assembled six-port core from `verification/em/layout/sparx<FREQ>_core.gds` (the six-port network with the seven Palace port markers, written by `build-layout`).
 
-The band pass filter parameters of the core (`order`, `bandwidth`, `filter_type`, `connection_length_bpf`, and `ripple_dB`) are not exposed as Python arguments. They are hardcoded in `sparx_core_em_sim.py` and must be changed in the script if required. Since the core must reflect the actual chip layout, any change there must also be applied in `scripts/six_port_gen.py`.
+Like the sub-structures, the core reflects the chip layout, so all its parameters come from `scripts/six_port_gen.py`.
 
 ```sh
-make sim-sparx-core-em
-make sim-sparx-core-em FREQ=77
+make build-layout && make sim-sparx-core-em
+make build-layout FREQ=77 && make sim-sparx-core-em FREQ=77
 ```
 
 > [!NOTE]
@@ -529,7 +721,7 @@ Plots the first-column S-parameters (magnitude and phase) of a Touchstone file f
 
 ```sh
 make view-em-sim
-make view-em-sim FILE_NAME=sparx_blc_160GHz_50Ohm_TM2_M5_e_r_4_1.s4p
+make view-em-sim FILE_NAME=sparx160_blc.s4p
 ```
 
 The `FILE_NAME` parameter is the Touchstone file name including its extension (default: the BLC result for the current parameters).
@@ -542,54 +734,56 @@ Copies both Touchstone files of an EM simulation run, the raw result and the de-
 - `SPARAM` is the EM run name, i.e. the GDS/Touchstone base name without extension (default: the BLC run for the current EM parameters).
 
 ```sh
-make copy-sparam SPARAM=sparx_bpf_f_160GHz_bw_1GHz_sig_TM2_gnd_M5_z0_50Ohm_er_4_1_butter_ord_3
-make copy-sparam SPARAM=sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U
-make copy-sparam SPARAM=sparx_blc_160GHz_50Ohm_TM2_M5_e_r_4_1
+make copy-sparam SPARAM=sparx160_bpf
+make copy-sparam SPARAM=sparx160_wpd
+make copy-sparam SPARAM=sparx160_blc
 ```
 
 
 ### S-Parameter to Lumped Element Netlist Conversion
 
-Converts an S-parameter Touchstone file into a lumped element (LE) netlist with [snp2le](https://github.com/iic-jku/snp2le). The conversion performs a universal rational fit of the given order and writes a passivity-enforced `.subckt` model that can be resimulated in place of the full EM S-parameter model. The de-embedded EM results (`*_deembedded.sNp`, see `copy-sparam`) are always used as input.
+Converts an S-parameter Touchstone file into a lumped element (LE) netlist with [snp2le](https://github.com/iic-jku/snp2le). The conversion performs a universal rational fit of the given order and writes a passivity-enforced `.subckt` model that can be resimulated in place of the full EM S-parameter model. The raw EM results (`sparx<FREQ>_<structure>.sNp`, see `copy-sparam`) are used as input.
 
-- `SNP` is the input Touchstone file (default: the de-embedded BPF EM result `verification/em/s-parameter/sparx_bpf_f_160GHz_bw_1GHz_sig_TM2_gnd_M5_z0_50Ohm_er_4_1_butter_ord_3_deembedded.s2p`).
+- `SNP` is the input Touchstone file (default: the raw BPF EM result `verification/em/s-parameter/sparx160_bpf.s2p`).
 - `ORDER` sets the maximum model order (number of poles) of the universal fit (default: `13`).
 - `LE_FORMAT` selects the output dialect: `spice` (ngspice, `.spice`) or `spectre` (VACASK, `.inc`) (default: `spice`).
 - `LE_OUT` sets the output netlist path, which also names the `.subckt` (default: `netlist/spice/sparx_bpf_le.spice`). If set to an empty value, it falls back to `netlist/spice/<name>_le.spice` for `spice` or `netlist/spectre/<name>_le.inc` for `spectre`, where `<name>` is the input file name without its Touchstone extension.
+- `LE_NOISE` selects the noise of the model: `noiseless` emits the fit's resistors with `noisy=0`, since their noise would follow the fit and not the structure, and `thermal` (snp2le `--thermal-noise`) adds the thermal noise of the passive itself, kT(I - S S<sup>H</sup>) at its ports, as a generator computed from the fit (default: `noiseless`). `thermal` needs an snp2le newer than 0.1.9.
 
-Running `make snp2le` without arguments reproduces the BPF conversion (first example below). The commands used to generate the LE netlists in `netlist/spice/` are:
+Running `make snp2le` without arguments reproduces the BPF conversion (first example below). The commands used to generate the LE netlists in `netlist/spice/` are (`LE_FORMAT=spectre` and an `.inc` path in `netlist/spectre/` for the VACASK ones):
 
 ```sh
-make snp2le SNP=verification/em/s-parameter/sparx_bpf_f_160GHz_bw_1GHz_sig_TM2_gnd_M5_z0_50Ohm_er_4_1_butter_ord_3_deembedded.s2p ORDER=13 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_bpf_le.spice
-make snp2le SNP=verification/em/s-parameter/sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U_deembedded.s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
-make snp2le SNP=verification/em/s-parameter/sparx_blc_160GHz_50Ohm_TM2_M5_e_r_4_1_deembedded.s4p ORDER=6 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_blc_le.spice
-make snp2le SNP=verification/em/s-parameter/sparx160_core_deembedded.s7p ORDER=24 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_core_le.spice
+make snp2le SNP=verification/em/s-parameter/sparx160_bpf.s2p ORDER=13 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_bpf_le.spice
+make snp2le SNP=verification/em/s-parameter/sparx160_wpd.s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
+make snp2le SNP=verification/em/s-parameter/sparx160_blc.s4p ORDER=6 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_blc_le.spice
+make snp2le SNP=verification/em/s-parameter/sparx160_core.s7p ORDER=24 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_core_le.spice LE_NOISE=thermal
 ```
 
 
 ### Six-Port Core EM Flow
 
-Runs the complete six-port core EM flow in one target: core GDS generation and EM simulation (`sim-sparx-core-em`), copying of the raw and de-embedded S-parameters (`copy-sparam`), lumped element fitting with snp2le (`ORDER=24`, in both SPICE and Spectre dialects), and AC S-parameter simulation of the six-port core testbenches (`sparx_core_tb_acsp_ngspice` and `sparx_core_tb_acsp_vacask`).
+Runs the complete six-port core EM flow in one target: EM simulation of the core (`sim-sparx-core-em`), copying of the raw and de-embedded S-parameters (`copy-sparam`), lumped element fitting with snp2le (`ORDER=24` with the core's thermal noise, `LE_NOISE=thermal`, in both SPICE and Spectre dialects), and AC S-parameter simulation of the six-port core testbenches (`sparx_core_tb_acsp_ngspice` and `sparx_core_tb_acsp_vacask`).
 
-This target is intentionally not part of `make all` because the seven-port full-core EM simulation has a very long runtime.
+This target is intentionally not part of `make all` because the seven-port full-core EM simulation has a very long runtime. It starts from `verification/em/layout/sparx<FREQ>_core.gds`, so run `build-layout` for the target frequency first (the 160 GHz core is committed to the repository).
 
 ```sh
 make sparx-core
-make sparx-core FREQ=77
+make build-layout FREQ=77 && make sparx-core FREQ=77
 ```
 
 
 ### Xschem Testbench Simulation
 
-Runs a single Xschem testbench in batch mode (no display): it saves the schematic, exports the netlist to `testbenches/xschem/simulations/`, and runs the simulator. The testbench is selected with the `TB` variable (given without the `.sch` extension). The netlist format and simulator are derived automatically from the testbench name: names ending in `_ngspice` are netlisted as SPICE and simulated with ngspice, while names ending in `_vacask` are netlisted as Spectre and simulated with VACASK.
+Runs a single Xschem testbench in batch mode (no display): it saves the schematic, exports the netlist to `testbenches/xschem/simulations/`, and runs the simulator. The testbench is selected with the `TB` variable, given without the `.sch` extension (default: `sparx_bpf_le_tb_acsp_ngspice`). The netlist format and simulator are derived automatically from the testbench name: names ending in `_ngspice` are netlisted as SPICE and simulated with ngspice, while names ending in `_vacask` are netlisted as Spectre and simulated with VACASK.
 
 The target netlists with `xschem netlist` and then invokes the simulator directly in batch mode (`ngspice -b` for the `.spice` benches, `vacask -qp -sp` for the `.spectre` benches) instead of `xschem simulate`. For ngspice, `xschem simulate` would launch an interactive ngspice in a terminal detached from make (`$terminal -e 'ngspice -i ...'`): the target would return while ngspice waits at its prompt, the result would never be checked, and the process (with its X server) would leak. Running the simulator directly makes `make` block until the run finishes and see its exit status.
 
 VACASK is run with `-qp` (quiet progress, appropriate for a batch run) and `-sp` (skip postprocessing): the postprocess scripts that the VACASK testbenches declare are run by the Makefile right after the simulation instead. This bypasses VACASK's own subprocess launcher, which aborts with a `boost::asio` "Bad file descriptor" error on hosts whose kernel or container runtime blocks the syscalls it uses to spawn and await a child process. The `postprocess(PYTHON, ...)` lines stay in the testbenches, so running them from the Xschem GUI still postprocesses as usual.
 
-For the VACASK testbenches, `sim-xschem` also writes the operating-point save file `simulations/<TB>.save` (`write_data [save_params]`) while netlisting. The VACASK testbenches contain the same call in their Xschem launcher, but that runs only when the testbench is started from the Xschem GUI, and `simulations/` is not tracked by git. Without this step, a testbench that includes its save file (`include "<TB>.save"`, e.g. the power-detector harmonic-balance testbench) aborts with `File not found` on a fresh clone.
+`sim-xschem` also writes the FET operating-point save file `simulations/<TB>.save` (`write_data [save_params]`) while netlisting, for every testbench. That file lists the operating-point parameters of every transistor (`ids`, `gm`, `gds`, `vth` and so on), which the `annotate_fet_params` symbols and the `Annotate OP` launcher read back from the raw file. The testbenches that contain transistors pull it in by its bare file name, so it resolves inside `testbenches/xschem/simulations/`, where the simulator runs: the ngspice benches of the power detector and of the two top-level transient simulations through a `SAVE` code block (`.include <TB>.save`), the VACASK benches of the power detector through `include "<TB>.save"` in their control block. The `Simulate` launcher of every testbench writes the same file before it starts the simulator, so the file always matches the devices currently in the schematic, no `.save` file is tracked by git, and a fresh clone needs no manual export. Xschem's **IHP > Create FET .save file** menu entry writes the same file by hand.
 
 ```sh
+make sim-xschem                                  # run the default testbench (sparx_bpf_le_tb_acsp_ngspice)
 make sim-xschem TB=sparx_bpf_le_tb_acsp_ngspice
 make sim-xschem TB=sparx_bpf_le_tb_acsp_vacask
 make sim-xschem TB=sparx_powdet_sbd_tb_ngspice
@@ -600,9 +794,10 @@ Because `sim-xschem` runs headless, ngspice runs in batch mode (`ngspice -b`), w
 
 ### View Xschem Testbench Results
 
-To view a testbench's results on screen, use `sim-view-xschem` after running the simulation with `sim-xschem`. It runs a plotting script from `testbenches/xschem/plot_simulations/` (`SIM_PLOT_DIR`), selected with the `SCRIPT` variable (given without the `.py` extension), and reproduces the plots of the testbenches' `.control` blocks with matplotlib from the exported data in `xschem/plot_simulations/data/`, following the `plot_simulations` structure of the [ihp-sg13g2-ams-chip-template](https://github.com/iic-jku/ihp-sg13g2-ams-chip-template):
+To view a testbench's results on screen, use `sim-view-xschem` after running the simulation with `sim-xschem`. It runs a plotting script from `testbenches/xschem/plot_simulations/` (`SIM_PLOT_DIR`), selected with the `SCRIPT` variable, given without the `.py` extension (default: `plot_n_port_tb_acsp_ngspice`), and reproduces the plots of the testbenches' `.control` blocks with matplotlib from the exported data in `xschem/plot_simulations/data/`, following the `plot_simulations` structure of the [ihp-sg13g2-ams-chip-template](https://github.com/iic-jku/ihp-sg13g2-ams-chip-template):
 
 ```sh
+make sim-view-xschem                             # run the default plotting script (plot_n_port_tb_acsp_ngspice)
 make sim-view-xschem SCRIPT=plot_n_port_tb_acsp_ngspice
 make sim-view-xschem SCRIPT=plot_n_port_tb_tran_ngspice
 ```
@@ -636,6 +831,14 @@ The following testbenches are simulated:
 - `sparx_core_tb_acsp_ngspice` / `sparx_core_tb_acsp_vacask`: six-port core built from the BPF, WPD, and BLC LE models, AC S-parameter
 - `sparx_powdet_sbd_tb_ngspice`: SBD-based power detector (ngspice)
 - `sparx_powdet_sbd_tb_hb_vacask`: SBD-based power detector, harmonic balance (VACASK)
+- `sparx_powdet_sbd_tb_pss_vacask`: SBD-based power detector, single-tone periodic steady state (VACASK), fits the responsivity that the noise figure bench turns into an NEP
+- `sparx_powdet_sbd_tb_nf_vacask`: SBD-based power detector, noise figure and NEP (VACASK), small-signal `noise` at the dc operating point and LO-pumped `hbnoise` with the `hbac` conversion, checked against `pnoise` and `pac` on a shooting PSS of the same LO, runs after the PSS bench. This bench and the PSS bench need VACASK `1b48553` or later, see the [testbench README](testbenches/xschem/README.md)
+- `sparx_powdet_sbd_tb_tn_vacask`: SBD-based power detector, LO-pumped transient-noise ladder checked against `hbnoise` (VACASK), runs after the NF bench
+- `sparx_powdet_sbd_tb_tn_lo_vacask`: SBD-based power detector, the same ladder at nine LO levels, noise figure against LO drive from transient noise, `hbnoise`, `pnoise` and the small-signal `noise` analysis at the dc operating point (VACASK), runs after the NF bench
+- `sparx_top_le_tb_rx_vacask`: six-port receiver, full-core LE model with the four power detectors, as fabricated and post-layout (`VARIANT=m1_pex`): HB at the LO, HBAC IF response and IF output against LO power, two-tone HB cross-check, transient (VACASK)
+- `sparx_top_le_tb_tran_ngspice` / `sparx_top_tb_tran_ngspice`: six-port receiver transient with the full-core and the composed LE model (ngspice), LO +12 dBm and RF -20 dBm behind 50 Ohm at the pads
+- `sparx_top_le_tb_nf_vacask`: six-port receiver noise figure of the four detector outputs and the I and Q outputs, full-core LE model with the four power detectors, as fabricated and post-layout (`VARIANT=m1_pex`): small-signal `noise` at the dc operating point, `hbnoise` and `pnoise` with the `hbac` and `pac` conversion, over the IF and against LO power (VACASK `1b48553` or later), runs after the detector NF bench and the receiver bench
+- `sparx_top_le_tb_tn_vacask`: six-port receiver, LO-pumped transient-noise ladder checked against `hbnoise` and turned into a noise figure next to the other three estimates (VACASK), runs after the receiver NF bench
 
 
 ### Build, Simulate, and Verify All
@@ -646,7 +849,7 @@ Runs the complete design flow end to end:
 2. Verification of the SBD-based power detector cell with both flows, KLayout DRC, LVS, and PEX as well as Magic DRC, Magic + Netgen LVS, and Magic PEX, followed by KLayout DRC and Magic DRC of the top-level six-port.
 3. EM simulation of the passive RF structures with AWS Palace (`sim-bpf-em`, `sim-wpd-em`, `sim-blc-em`).
 4. Copying of the raw and de-embedded EM S-parameter results to `verification/em/s-parameter/` (`copy-sparam` for BPF, WPD, and BLC).
-5. De-embedded S-parameter to lumped element netlist conversion with snp2le, in both SPICE and Spectre netlists, for the BPF, WPD, and BLC.
+5. Raw S-parameter to lumped element netlist conversion with snp2le, in both SPICE and Spectre netlists, for the BPF, WPD, and BLC.
 6. All Xschem testbench simulations (`sim-all`).
 
 ```sh
@@ -654,7 +857,7 @@ make all
 ```
 
 > [!NOTE]
-> This target runs the full-wave EM simulations and therefore has a long runtime. The snp2le conversions read the de-embedded Touchstone files in `verification/em/s-parameter/`, which are copied there from the Palace output by `copy-sparam`.
+> This target runs the full-wave EM simulations and therefore has a long runtime. The snp2le conversions read the raw Touchstone files in `verification/em/s-parameter/`, which are copied there from the Palace output by `copy-sparam`.
 
 ### Release
 
@@ -667,6 +870,7 @@ The following folders are exported:
 - `netlist/layout` -> `release/v.<VERSION>/netlist/layout`
 - `render/img/<TOP>_black.png` -> `release/v.<VERSION>/img/<TOP>_black.png`
 - `render/img/<TOP>_white.png` -> `release/v.<VERSION>/img/<TOP>_white.png`
+- `render/img/<TOP>_black_TM2.png` -> `release/v.<VERSION>/img/<TOP>_black_TM2.png`
 
 Run with default version (`2.0.0`):
 
@@ -703,7 +907,7 @@ To keep the runtime low while still covering most of the toolchain, the regressi
 
 - Only the small `sparx_powdet_sbd` power-detector cell is verified, not the full six-port top cell. KLayout DRC, KLayout LVS, and KLayout PEX are run. Magic DRC, Magic + Netgen LVS, and Magic PEX are run.
 - The full-wave EM solve is not re-run by the default `regression`. The AWS Palace EM simulation of the Wilkinson power divider (WPD) is the slowest step, so `regression` reuses the committed WPD Palace results and only exercises the downstream flow: S-parameter copy and lumped-element conversion (SPICE and Spectre). Use `regression-nightly` (or `make sim-wpd-em`) to regenerate the EM results.
-- Only one ngspice and one VACASK testbench are simulated (the bandpass-filter AC S-parameter benches).
+- Only one ngspice and one VACASK testbench are simulated (the Wilkinson power divider AC S-parameter benches).
 - The layout is generated at a single frequency (160 GHz). No frequency sweep is run.
 - Top-level LVS is not run (work in progress).
 
@@ -713,14 +917,44 @@ The following tools and flows are checked:
 | --- | --- |
 | GDSFactory PDK add-on build (git clone + pip install) | `build-pdk` (via `build-top`) |
 | GDSFactory (programmatic six-port layout generation) | `build-layout` (via `build-top`) |
-| KLayout (GDS-to-image rendering) | `render-gds` (via `build-top`) |
+| `sak-render.py` (GDS-to-image rendering) | `render-gds` (via `build-top`) |
 | Xschem netlisting, KLayout DRC, KLayout LVS, KLayout PEX | `klayout-verify CELL=sparx_powdet_sbd` |
 | Xschem netlisting, Magic DRC, Magic + Netgen LVS, Magic PEX | `magic-verify CELL=sparx_powdet_sbd` |
 | GDSFactory + gds2palace meshing + AWS Palace EM solve | `sim-wpd-em` (`regression-nightly` only) |
-| S-parameter result copy (raw + de-embedded) | `copy-sparam SPARAM=sparx_wpd_...` |
-| snp2le (de-embedded S-parameter to lumped element, SPICE + Spectre) | `snp2le SNP=..._deembedded.s3p ...` |
+| S-parameter result copy (raw + de-embedded) | `copy-sparam SPARAM=sparx160_wpd` |
+| snp2le (raw S-parameter to lumped element, SPICE + Spectre) | `snp2le SNP=.../sparx160_wpd.s3p ...` |
 | Xschem netlisting + ngspice | `sim-xschem TB=sparx_wpd_le_tb_acsp_ngspice` |
 | Xschem netlisting + VACASK | `sim-xschem TB=sparx_wpd_le_tb_acsp_vacask` |
+
+
+### Clean
+
+`make clean` deletes everything the targets of this Makefile generate. The sources stay untouched: the layout generator and helper scripts, the schematics, symbols and testbenches, the EM model scripts and the stackup documentation under `verification/em/`, the plotting scripts, the documentation sources and the notebook. Deleted are:
+
+- `build/` (the GDSFactory scratch folder of `build-layout`)
+- `layout/` (the six-port layouts of every frequency and the power detector)
+- `verification/em/layout/`, `verification/em/palace_model/` and `verification/em/s-parameter/` (the EM structures, the Palace meshes and results, and the copied Touchstone files)
+- `netlist/` (the schematic, layout and PEX netlists of the power detector, and the SPICE and Spectre lumped element netlists)
+- `render/img/` (the chip renders)
+- `verification/drc/` and `verification/lvs/`
+- `schematic/xschem/simulations/`, `testbenches/xschem/simulations/` and the `plot_simulations/` outputs (`data/`, `figures/`, `__pycache__/`)
+- the `__pycache__` folders under `scripts/` and `verification/em/scripts/`, and the kpex leftovers `*.nodes` and `*.sim` in the repository root
+
+The GDSFactory PDK add-on (`IHP/` and `.venv/`, both git-ignored) is a tool installation rather than a build product, so `clean` keeps it and `build-pdk` replaces it anyway. The rendered documentation has its own target, `make -C doc clean`.
+
+```sh
+make clean
+```
+
+[`release/`](release/) is never deleted, so published versions survive a clean. Every target recreates the folders it writes to, so a full rebuild from a clean tree is:
+
+```sh
+make clean
+make all
+```
+
+> [!WARNING]
+> Most of these outputs are committed in this repository, so `make clean` leaves a large deletion set in `git status`. Run `git restore .` to get the tracked ones back if you did not mean to remove them. This includes the Palace results under `verification/em/palace_model/`: `make all` regenerates the BPF, WPD and BLC solves, but the seven-port core solve only comes back with `make sparx-core`, and the default `make regression` reuses the committed WPD result, so after a clean it fails at `copy-sparam` until that result is restored or regenerated with `make sim-wpd-em`.
 
 
 ## Cite This Work
@@ -728,9 +962,9 @@ The following tools and flows are checked:
 ```
 @misc{2026_SPARX,
   author = {Dorrer, Simon and Kellerer-Pirklbauer, David and Pretl, Harald},
-  month = apr,
+  month = oct,
   year = {2026},
-  title = {{GitHub Repository for SPARX: An Open-Source, Automated, Programmatically Generated, Frequency-Scalable Six-Port Receiver in 130-nm CMOS}},
+  title = {{GitHub Repository of SPARX: An Open-Source, Automated, Programmatically Generated, Frequency-Scalable Six-Port Receiver in 130-nm CMOS}},
   url = {https://github.com/iic-jku/SG13CMOS_SPARX},
   doi = {10.5281/zenodo.19654232}
 }

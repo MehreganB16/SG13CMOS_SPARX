@@ -23,6 +23,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_FREQUENCY = 160e9  # design frequency in Hz
 
+# EM sub-structures (BLC, WPD, BPF) are exported here for the Palace flow
+EM_LAYOUT_DIR = PROJECT_ROOT / "verification" / "em" / "layout"
+
+
 def resolve_output_path(path_value: str) -> Path:
     """Resolve output path relative to project root unless absolute."""
     path = Path(path_value).expanduser()
@@ -34,6 +38,28 @@ def resolve_output_path(path_value: str) -> Path:
 def snap_to_grid(value: float) -> float:
     """Snap a length in um down to the nearest PDK grid point."""
     return round(value - value % ihp.tech.nm, 3)
+
+
+def write_em_gds(component: gf.Component, filename: str, cell_name: str) -> Path:
+    """Write an EM sub-structure to verification/em/layout for the Palace flow.
+
+    The filename encodes the design frequency and must match the
+    corresponding <CELL>_EM_NAME in the Makefile, which is how the EM
+    targets pick the structure to simulate.
+
+    Args:
+        component: Component carrying the Palace port markers (layers 201..).
+        filename: File name including the .gds suffix.
+        cell_name: Top cell name
+
+    Returns:
+        Path of the written GDS file.
+    """
+    gds_path = EM_LAYOUT_DIR / filename
+    component.name = cell_name
+    component.write_gds(gds_path, with_metadata=False)
+    print(str(gds_path))
+    return gds_path
 
 
 def add_pad_pin(c: gf.Component, port_name: str, pad_name: str, pad_length: float ) -> None:
@@ -110,6 +136,8 @@ FREQUENCY = args.frequency
 do_fill = not args.no_fill
 do_fill_m5 = not args.no_fill_m5
 
+
+
 # ============================================================
 # Design constants
 # ============================================================
@@ -167,6 +195,7 @@ NOFILL_SIDE_OFFSET = 12.5  # side nofill centering offset ((110 - 85) / 2)
 
 # Layout spacing (um)
 RFIN_GAP = 40  # gap between BLC port and PD rfin
+RFIN_PD = 18.4 # part of the connection that is part of the PD
 PROBE_PD_GAP = 5  # gap between PD edge and probe edge
 SEALRING_MARGIN = 50  # margin around circuit for sealring
 
@@ -207,13 +236,17 @@ def fill_cell(layer=ihp.tech.LAYER.Metal5slit, size=(3, 3)) -> gf.Component:
 
 @gf.cell
 def fill_gat_active(size=(3, 3), active_extension=(0.18, 0.18)) -> gf.Component:
-    """Gate-poly + active filler cell with centred Activ region."""
+    """Gate-poly + active filler cell with centred Activ region.
+
+    `size` sets GatPoly:filler directly (bounded by GFil.a's 5.00um max width);
+    Activ:filler is inset by `active_extension` so GatPoly:filler encloses it (GFil.j).
+    """
     c = gf.Component()
     gat_ref = c.add_ref(gf.c.rectangle(layer=ihp.tech.LAYER.GatPolyfiller, size=size))
     activ_ref = c.add_ref(
         gf.c.rectangle(
             layer=ihp.tech.LAYER.Activfiller,
-            size=(size[0] + 2 * active_extension[0], size[1] + 2 * active_extension[1]),
+            size=(size[0] - 2 * active_extension[0], size[1] - 2 * active_extension[1]),
         )
     )
     activ_ref.center = gat_ref.center
@@ -1971,6 +2004,8 @@ def powdet_sbd() -> gf.Component:
     )
     straight_m3_ref = c.add_ref(straight_m3)
     straight_m3_ref.connect("e1", output_stage_ref.ports["vref"], allow_width_mismatch=True, allow_layer_mismatch=True)
+    rfin_connection = c.add_ref(ihp.cells.straight(length=RFIN_PD, cross_section="topmetal2_routing", width=7.2))
+    rfin_connection.connect("e1", via_tm1_tm2_ref.ports["top"], allow_width_mismatch=True)
     # add ports to the power detector
     vout_port = c.add_port(name="vout", port=output_stage_ref.ports["vout"])
     c.ports["vout"].orientation = 90
@@ -1979,7 +2014,7 @@ def powdet_sbd() -> gf.Component:
     c.ports["vref"].center = (c.ports["vref"].center[0], c.ports["vref"].center[1] - 0.1)  # preventing notch
     c.ports["vref"].orientation = 90
     
-    rfin_port = c.add_port(name="rfin", port=via_tm1_tm2_ref.ports["top"])
+    rfin_port = c.add_port(name="rfin", port=rfin_connection.ports["e2"])
     c.ports["rfin"].orientation = 270
     
     vss_port = c.add_port(name="vss", port=c3_ref.ports["LC_B_1_1"])
@@ -1996,7 +2031,7 @@ def powdet_sbd() -> gf.Component:
     gf.labels.add_port_labels(c, ports= [vdd_port], layer = ihp.tech.LAYER.TopMetal1text)
     gf.add_pins.add_pin_rectangle(c, port=vout_port, layer=ihp.tech.LAYER.Metal4pin)
     gf.add_pins.add_pin_rectangle(c, port=vref_port, layer=ihp.tech.LAYER.Metal3pin)
-    gf.add_pins.add_pin_rectangle(c, port=rfin_port, layer=ihp.tech.LAYER.TopMetal2pin)
+    gf.add_pins.add_pin_rectangle_inside(c, port=rfin_port, layer=ihp.tech.LAYER.TopMetal2pin)
     gf.add_pins.add_pin_rectangle(c, port=vss_port, layer=ihp.tech.LAYER.Metal5pin)
     gf.add_pins.add_pin_rectangle(c, port=vdd_port, layer=ihp.tech.LAYER.TopMetal1pin)
 
@@ -2073,8 +2108,8 @@ wavelength_8 = snap_to_grid(wavelength / 8)  # eighth wavelength
 
 
 # filter parameters
-# Note: these parameters are duplicated in verification/em/scripts/sparx_core_em_sim.py,
-# any change here must also be applied there
+# Note: this file is the single reference for the BPF, both as it is built into
+# the chip and as it is exported for EM simulation.
 order = 3  # order of the band pass filter
 bandwidth = 1e9  # 1GHz bandwidth for input band pass filter
 filter_type = "butter"  # type of the band pass filter, can be "butter", "cheby",
@@ -2082,6 +2117,7 @@ connection_length_bpf = 10  # length of the connection piece between the band pa
 ripple_dB = 3  # ripple in dB for the cheby filter, ignored if the filter type is Butter
 
 # wilkinson power divider parameters
+wpd_shape = "U"  # routing shape of the wilkinson power divider, can be "C", "U"
 connection_length_wpd = 0  # length of the connection piece of the wilkinson power divider ports
 connection_length_bpf_wpd = (
     wavelength_4 * 3.5 / 5
@@ -2111,6 +2147,30 @@ blc_2_ref = c.add_ref(blc)
 
 blc_3_ref = c.add_ref(blc)
 
+
+## BLC EM sim prepatation
+# copy and prepare the BLC structure for EM simulation
+blc_em = blc.copy()
+
+port1 = blc_em.add_ref(gf.components.rectangle(size=(0.1, blc_em.ports["e1"].width), layer=(201,0)))
+port1.center = (blc_em.ports["e1"].center)
+port1.move((0.05,0))
+
+port2 = blc_em.add_ref(gf.components.rectangle(size=(0.1, blc_em.ports["e2"].width), layer=(202,0)))
+port2.center = (blc_em.ports["e2"].center)
+port2.move((-0.05,0))
+
+port3 = blc_em.add_ref(gf.components.rectangle(size=(0.1, blc_em.ports["e3"].width), layer=(203,0)))
+port3.center = (blc_em.ports["e3"].center)
+port3.move((-0.05,0))
+
+port4 = blc_em.add_ref(gf.components.rectangle(size=(0.1, blc_em.ports["e4"].width), layer=(204,0)))
+port4.center = (blc_em.ports["e4"].center)
+port4.move((0.05,0))
+# end BLC em
+
+
+
 corner = ihp.cells.tline_corner(
     signal_cross_section=signal_cross_section,
     ground_cross_section=ground_cross_section,
@@ -2137,12 +2197,28 @@ wpd = ihp.cells.wilkinson_power_divider(
     ground_cross_section=ground_cross_section,
     Z0=Z0,
     e_r=e_r,
-    shape="U",
+    shape=wpd_shape,
 )
 
 wpd.ports["e1"].orientation = 0
 wpd_ref = c.add_ref(wpd)
 
+## WPD EM sim prepatation
+# copy and prepare the WPD structure for EM simulation
+wpd_em = wpd.copy()
+
+port1 = wpd_em.add_ref(gf.components.rectangle(size=(0.1, wpd_em.ports["e1"].width), layer=(201,0)))
+port1.center = (wpd_em.ports["e1"].center)
+port1.move((0.05,0))
+
+port2 = wpd_em.add_ref(gf.components.rectangle(size=(wpd_em.ports["e2"].width, 0.1), layer=(202,0)))
+port2.center = (wpd_em.ports["e2"].center)
+port2.move((0, -0.05))
+
+port3 = wpd_em.add_ref(gf.components.rectangle(size=(wpd_em.ports["e3"].width, 0.1), layer=(203,0)))
+port3.center = (wpd_em.ports["e3"].center)
+port3.move((0, 0.05))
+# end WPD em
 
 connection_length_wpd_blc_one_leg = (
     blc_1_ref.ports["e1"].center[1]
@@ -2181,8 +2257,7 @@ connection_bpf_wpd = c.add_ref(
 connection_bpf_wpd.connect("e1", wpd_ref.ports["e1"])
 
 
-bandpass_filter = c.add_ref(
-    ihp.cells.hairpin_coupled_line_bandpass_filter(
+bpf = ihp.cells.hairpin_coupled_line_bandpass_filter(
         frequency=f,
         bandwidth=bandwidth,
         order=order,
@@ -2194,16 +2269,26 @@ bandpass_filter = c.add_ref(
         Z0=Z0,
         e_r=e_r,
     )
-)
+bandpass_filter = c.add_ref(bpf)
+
+
+## BPF EM sim prepatation
+# copy and prepare the BPF structure for EM simulation
+bpf_em = bpf.copy()
+port1 = bpf_em.add_ref(gf.components.rectangle(size=(0.1, bpf_em.ports["e1"].width), layer=(201,0)))
+port1.center = (bpf_em.ports["e1"].center)
+port1.move((0.05,0))
+
+port2 = bpf_em.add_ref(gf.components.rectangle(size=(0.1, bpf_em.ports["e2"].width), layer=(202,0)))
+port2.center = (bpf_em.ports["e2"].center)
+port2.move((-0.05,0))
+# end BPF em
 
 bandpass_filter.connect("e1", connection_bpf_wpd.ports["e2"])
 
-# Note: the blank six-port core for EM simulation (sparx<FREQ>_core.gds) is
-# generated by verification/em/scripts/sparx_core_em_sim.py, which assembles
-# the same network with Palace port markers.
 
 connection_blc_r_termination = ihp.cells.straight(
-    length=round(CONNECTION_LEN_TERM * freq_scale, 3),  # scales with frequency
+    length=round(CONNECTION_LEN_TERM, 3), 
     cross_section=signal_cross_section,
     width=ihp.cells.waveguides._calculate_width_from_Z0(
         Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
@@ -2228,13 +2313,16 @@ via_m1_tm2.ports["bottom"].orientation = 180
 via_m1_tm2_ref = c.add_ref(via_m1_tm2)
 via_m1_tm2_ref.connect("top", connection_blc_r_termination_ref.ports["e2"], allow_width_mismatch=True)
 
+
+
+
+
 r_termination = ihp.cells.rsil(
-    resistance=Z0,
     width=RSIL_WIDTH,
     length=RSIL_LENGTH,
 )
-r_termination_ref = c.add_ref(r_termination)
-r_termination_ref.connect("e1", via_m1_tm2_ref.ports["bottom"], allow_width_mismatch=True, allow_layer_mismatch=True)
+
+length_r_termination = abs(r_termination.ports["e2"].center[1] - r_termination.ports["e1"].center[1])
 
 via_m1_m5 = ihp.cells.via_stack(
     top_layer="Metal5",
@@ -2245,7 +2333,9 @@ via_m1_m5 = ihp.cells.via_stack(
 via_m1_m5.ports["top"].orientation = 180
 via_m1_m5.ports["bottom"].orientation = 0
 via_m1_m5_ref = c.add_ref(via_m1_m5)
-via_m1_m5_ref.connect("bottom", r_termination_ref.ports["e2"], allow_width_mismatch=True, allow_layer_mismatch=True)
+via_m1_m5_ref.center = via_m1_tm2_ref.center
+
+via_m1_m5_ref.move((-length_r_termination, 0))  # move to the left of the RSIL termination
 
 connection_r_termination_vss = ihp.cells.straight(
     length=10,  # manual measurement to fit the design
@@ -2257,6 +2347,102 @@ connection_r_termination_vss_ref.connect(
     "e1", via_m1_m5_ref.ports["top"], allow_width_mismatch=True, allow_layer_mismatch=True
 )
 
+# rfin connections between BLC ports and PDs (created before the EM copy so
+# they are part of the six-port core and ports 3-6 can sit at their far ends)
+rfin_gap = RFIN_GAP  # straight T-line gap between BLC port and PD rfin port
+
+rfin_connection_pd1 = c.add_ref(
+    ihp.cells.straight(
+        length=rfin_gap - RFIN_PD,
+        cross_section=signal_cross_section,
+        width=blc_1_ref.ports["e2"].width,
+    )
+)
+rfin_connection_pd1.connect("e1", blc_1_ref.ports["e2"])
+
+rfin_connection_pd2 = c.add_ref(
+    ihp.cells.straight(
+        length=rfin_gap - RFIN_PD,
+        cross_section=signal_cross_section,
+        width=blc_1_ref.ports["e3"].width,
+    )
+)
+rfin_connection_pd2.connect("e1", blc_1_ref.ports["e3"], allow_width_mismatch=True)
+
+rfin_connection_pd3 = c.add_ref(
+    ihp.cells.straight(
+        length=rfin_gap - RFIN_PD,
+        cross_section=signal_cross_section,
+        width=blc_2_ref.ports["e3"].width,
+    )
+)
+rfin_connection_pd3.connect("e1", blc_2_ref.ports["e3"], allow_width_mismatch=True)
+
+rfin_connection_pd4 = c.add_ref(
+    ihp.cells.straight(
+        length=rfin_gap - RFIN_PD,
+        cross_section=signal_cross_section,
+        width=blc_2_ref.ports["e2"].width,
+    )
+)
+rfin_connection_pd4.connect("e1", blc_2_ref.ports["e2"], allow_width_mismatch=True)
+
+connection_blc_pad_1 = c.add_ref(
+    ihp.cells.straight(
+        length=ihp.cells.waveguides._calculate_width_from_Z0(
+            Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
+        )*3,  
+        cross_section=signal_cross_section,
+        width=ihp.cells.waveguides._calculate_width_from_Z0(
+            Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
+        ),
+    )
+)
+connection_blc_pad_1.connect("e1", blc_3_ref.ports["e2"])
+## six-port core EM sim prepatation
+# copy and prepare the six-port core structure for EM simulation
+
+six_port_core = c.copy()
+
+port1 = six_port_core.add_ref(gf.components.rectangle(size=(0.1, bandpass_filter.ports["e2"].width), layer=(201,0)))
+port1.center = (bandpass_filter.ports["e2"].center)
+port1.move((0.05,0))
+
+port2 = six_port_core.add_ref(gf.components.rectangle(size=(0.1, connection_blc_pad_1.ports["e2"].width), layer=(202,0)))
+port2.center = (connection_blc_pad_1.ports["e2"].center)
+port2.move((-0.05,0))
+
+port3 = six_port_core.add_ref(gf.components.rectangle(size=(rfin_connection_pd1.ports["e2"].width, 0.1), layer=(203,0)))
+port3.center = (rfin_connection_pd1.ports["e2"].center)
+port3.move((0, -0.05))
+
+port4 = six_port_core.add_ref(gf.components.rectangle(size=(rfin_connection_pd2.ports["e2"].width, 0.1), layer=(204,0)))
+port4.center = (rfin_connection_pd2.ports["e2"].center)
+port4.move((0, -0.05))
+
+port5 = six_port_core.add_ref(gf.components.rectangle(size=(rfin_connection_pd4.ports["e2"].width, 0.1), layer=(205,0)))
+port5.center = (rfin_connection_pd4.ports["e2"].center)
+port5.move((0, 0.05))
+
+port6 = six_port_core.add_ref(gf.components.rectangle(size=(rfin_connection_pd3.ports["e2"].width, 0.1), layer=(206,0)))
+port6.center = (rfin_connection_pd3.ports["e2"].center)
+port6.move((0, 0.05))
+
+
+port7 = six_port_core.add_ref(gf.components.rectangle(size=(via_m1_tm2_ref.ports["bottom"].center[0] - via_m1_m5_ref.ports["bottom"].center[0] - via_m1_m5_ref.xsize, via_m1_m5_ref.ymax - via_m1_m5_ref.ymin ), layer=(207,0)))
+port7.xmin = via_m1_m5_ref.xmax
+port7.ymin = via_m1_m5_ref.ymin
+# port7.move((0.05,0))
+
+# end Six-Port em
+
+r_termination_ref = c.add_ref(r_termination)
+r_termination_ref.connect("e1", via_m1_tm2_ref.ports["bottom"], allow_width_mismatch=True, allow_layer_mismatch=True)
+
+via_m1_m5_ref.connect("bottom", r_termination_ref.ports["e2"], allow_width_mismatch=True, allow_layer_mismatch=True)
+
+
+
 # R-termination Metal5 nofill
 c.add_ref(
     gf.components.rectangle(
@@ -2266,16 +2452,62 @@ c.add_ref(
 ).center = connection_r_termination_vss_ref.center
 
 
-connection_bpd_pad = c.add_ref(
+connection_bpf_pad = c.add_ref(
     ihp.cells.straight(
-        length=round(CONNECTION_LEN_BPF_PAD * freq_scale, 2),  # scales with frequency
+        length=round(CONNECTION_LEN_BPF_PAD, 2),  # scales with frequency
         cross_section=signal_cross_section,
         width=ihp.cells.waveguides._calculate_width_from_Z0(
             Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
         ),
     )
 )
-connection_bpd_pad.connect("e1", bandpass_filter.ports["e2"], allow_width_mismatch=True)
+connection_bpf_pad.connect("e1", bandpass_filter.ports["e2"], allow_width_mismatch=True)
+
+connection_blc_pad_2 = c.add_ref(
+    ihp.cells.straight(
+        round(
+            CONNECTION_LEN_BLC_PAD + CONNECTION_LEN_BLC_EXTRA - ihp.cells.waveguides._calculate_width_from_Z0(
+                Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
+            ), 2
+        ),
+        cross_section=signal_cross_section,
+        width=ihp.cells.waveguides._calculate_width_from_Z0(
+            Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
+        ),
+    )
+)
+connection_blc_pad_2.connect("e1", connection_blc_pad_1.ports["e2"])
+
+# probe pads right
+probe_right = c.add_ref(
+    ihp.cells.bondpad_array(
+        config="GSG",
+        pitch=PROBE_PITCH,
+        width_ground=PROBE_GROUND_WIDTH_RIGHT,
+        width_signal=PROBE_SIGNAL_SIZE,
+        length_signal=PROBE_SIGNAL_SIZE,
+        signal_cross_section="topmetal1_routing",
+        ground_cross_section="metal1_routing",
+        ground_connection="psub",
+    )
+).rotate(-90)
+probe_right.connect("e1", connection_blc_pad_2.ports["e2"], allow_width_mismatch=True)
+
+c.add_ref(
+    gf.components.rectangle(size=(NOFILL_GSG_SIZE, NOFILL_GSG_SIZE), layer=ihp.tech.LAYER.Metal5nofill)
+).center = probe_right.center
+c.add_ports(probe_right.ports, prefix="probe_right_")
+
+connection_bpf_pad = c.add_ref(
+    ihp.cells.straight(
+        length=round(CONNECTION_LEN_BPF_PAD, 2),  # scales with frequency
+        cross_section=signal_cross_section,
+        width=ihp.cells.waveguides._calculate_width_from_Z0(
+            Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
+        ),
+    )
+)
+connection_bpf_pad.connect("e1", bandpass_filter.ports["e2"], allow_width_mismatch=True)
 
 
 # probe pads left
@@ -2293,45 +2525,14 @@ probe_left = c.add_ref(
 ).rotate(-90)
 probe_left.center = bandpass_filter.ports["e2"].center
 probe_left.xmax = bandpass_filter.ports["e2"].center[0] - 15
-probe_left.connect("e1", connection_bpd_pad.ports["e2"], allow_width_mismatch=True)
+probe_left.connect("e1", connection_bpf_pad.ports["e2"], allow_width_mismatch=True)
 
 c.add_ref(
     gf.components.rectangle(size=(NOFILL_GSG_SIZE, NOFILL_GSG_SIZE), layer=ihp.tech.LAYER.Metal5nofill)
 ).center = probe_left.center
 c.add_ports(probe_left.ports, prefix="probe_left_")
 
-connection_blc_pad = c.add_ref(
-    ihp.cells.straight(
-        length=round(
-            CONNECTION_LEN_BLC_PAD * freq_scale + CONNECTION_LEN_BLC_EXTRA, 3
-        ),  # scales with frequency + extra pad clearance
-        cross_section=signal_cross_section,
-        width=ihp.cells.waveguides._calculate_width_from_Z0(
-            Z0=Z0, e_r=e_r, signal_cross_section=signal_cross_section, ground_cross_section=ground_cross_section
-        ),
-    )
-)
-connection_blc_pad.connect("e1", blc_3_ref.ports["e2"])
 
-# probe pads right
-probe_right = c.add_ref(
-    ihp.cells.bondpad_array(
-        config="GSG",
-        pitch=PROBE_PITCH,
-        width_ground=PROBE_GROUND_WIDTH_RIGHT,
-        width_signal=PROBE_SIGNAL_SIZE,
-        length_signal=PROBE_SIGNAL_SIZE,
-        signal_cross_section="topmetal1_routing",
-        ground_cross_section="metal1_routing",
-        ground_connection="psub",
-    )
-).rotate(-90)
-probe_right.connect("e1", connection_blc_pad.ports["e2"], allow_width_mismatch=True)
-
-c.add_ref(
-    gf.components.rectangle(size=(NOFILL_GSG_SIZE, NOFILL_GSG_SIZE), layer=ihp.tech.LAYER.Metal5nofill)
-).center = probe_right.center
-c.add_ports(probe_right.ports, prefix="probe_right_")
 
 
 # ============================================================
@@ -2341,7 +2542,6 @@ c.add_ports(probe_right.ports, prefix="probe_right_")
 # Compute PD positions so rfin aligns straight with BLC ports.
 # Place each PD so its rfin port is directly above/below the BLC port,
 # with only a short straight gap (rfin_gap) in between.
-rfin_gap = RFIN_GAP  # straight T-line gap between BLC port and PD rfin port
 
 # create power detector (needed here to read rfin port offset)
 pd = powdet_sbd()
@@ -2434,14 +2634,6 @@ pd.write_gds(powdet_gds_filename)
 
 # PD1 reference, position and route
 pd1_ref = c.add_ref(pd).mirror_x()
-rfin_connection_pd1 = c.add_ref(
-    ihp.cells.straight(
-        length=rfin_gap,
-        cross_section=signal_cross_section,
-        width=blc_1_ref.ports["e2"].width,
-    )
-)
-rfin_connection_pd1.connect("e1", blc_1_ref.ports["e2"])
 pd1_ref.connect("rfin", rfin_connection_pd1.ports["e2"], allow_width_mismatch=True)
 
 # vdd connection of pd1 to probe top
@@ -2528,14 +2720,6 @@ route_pd1_vref = gf.routing.route_bundle_electrical(
 
 # PD2 reference, position and route
 pd2_ref = c.add_ref(pd)
-rfin_connection_pd2 = c.add_ref(
-    ihp.cells.straight(
-        length=rfin_gap,
-        cross_section=signal_cross_section,
-        width=blc_1_ref.ports["e3"].width,
-    )
-)
-rfin_connection_pd2.connect("e1", blc_1_ref.ports["e3"], allow_width_mismatch=True)
 pd2_ref.connect("rfin", rfin_connection_pd2.ports["e2"], allow_width_mismatch=True)
 
 # vdd connection of pd2 to probe top
@@ -2599,14 +2783,6 @@ route_pd2_vref = gf.routing.route_bundle_electrical(
 
 # PD3 reference, position and route
 pd3_ref = c.add_ref(pd).mirror_y().mirror_x()
-rfin_connection_pd3 = c.add_ref(
-    ihp.cells.straight(
-        length=rfin_gap,
-        cross_section=signal_cross_section,
-        width=blc_2_ref.ports["e3"].width,
-    )
-)
-rfin_connection_pd3.connect("e1", blc_2_ref.ports["e3"], allow_width_mismatch=True)
 pd3_ref.connect("rfin", rfin_connection_pd3.ports["e2"], allow_width_mismatch=True)
 
 # vdd connection of pd3 to probe bottom
@@ -2672,14 +2848,6 @@ route_pd3_vref = gf.routing.route_bundle_electrical(
 
 # PD4 reference, position and route
 pd4_ref = c.add_ref(pd).mirror_y()
-rfin_connection_pd4 = c.add_ref(
-    ihp.cells.straight(
-        length=rfin_gap,
-        cross_section=signal_cross_section,
-        width=blc_2_ref.ports["e2"].width,
-    )
-)
-rfin_connection_pd4.connect("e1", blc_2_ref.ports["e2"], allow_width_mismatch=True)
 pd4_ref.connect("rfin", rfin_connection_pd4.ports["e2"], allow_width_mismatch=True)
 
 # vdd connection of pd4 to probe bottom
@@ -2748,11 +2916,11 @@ route_pd4_vref = gf.routing.route_bundle_electrical(
 
 sealring_margin = SEALRING_MARGIN  # margin around circuit for sealring
 sealring_width = round(c.xsize + 2 * sealring_margin)
-sealring_height = round(c.ysize + 2 * sealring_margin)
+sealring_height = round(c.ysize + 2 * sealring_margin/2)
 
 print(f"Sealring: {sealring_width} x {sealring_height} um (freq_scale={freq_scale:.2f})")
 
-sealring_center =  c.center # save before adding more refs
+sealring_center =  (round(c.center[0], 2), round(c.center[1], 2))  # save before adding more refs, round it to avoid off grid errors
 c.add_ref(ihp.cells.sealring(width=sealring_width, height=sealring_height)).center = sealring_center
 
 
@@ -2834,10 +3002,10 @@ if not supervisors_gds_path.exists():
 
 if do_fill:
     # active/gat poly fill
-    gatpoly_activ_fill_space = 1
+    gatpoly_activ_fill_space = 0.85
     c.fill(
-        fill_cell=fill_gat_active(size=(3, 3)),
-        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -50)],
+        fill_cell=fill_gat_active(size=(5, 5)),
+        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -30)],
         exclude_layers=[
             (ihp.tech.LAYER.Activdrawing, 1.1),
             (ihp.tech.LAYER.pSDdrawing, 1.1),
@@ -2856,10 +3024,10 @@ if do_fill:
         y_space=gatpoly_activ_fill_space,
     )
     # metal1 fill
-    metal_fill_space = 1
+    metal_fill_space = 1.1
     c.fill(
-        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal1filler),
-        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -50)],
+        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal1filler, size=(5, 5)),
+        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -40)],
         exclude_layers=[
             (ihp.tech.LAYER.Metal1drawing, 10),
             (ihp.tech.LAYER.Passivdrawing, 10),
@@ -2870,8 +3038,8 @@ if do_fill:
     )
     # metal2 fill
     c.fill(
-        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal2filler),
-        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -50)],
+        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal2filler, size=(5, 5)),
+        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -40)],
         exclude_layers=[
             (ihp.tech.LAYER.Metal2drawing, 10),
             (ihp.tech.LAYER.Passivdrawing, 10),
@@ -2881,9 +3049,10 @@ if do_fill:
         y_space=metal_fill_space,
     )
     # metal3 fill
+    metal_fill_space = 1
     c.fill(
-        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal3filler),
-        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -50)],
+        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal3filler, size=(5, 5)),
+        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -40)],
         exclude_layers=[
             (ihp.tech.LAYER.Metal3drawing, 10),
             (ihp.tech.LAYER.Passivdrawing, 10),
@@ -2894,8 +3063,8 @@ if do_fill:
     )
     # metal4 fill
     c.fill(
-        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal4filler),
-        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -50)],
+        fill_cell=fill_cell(layer=ihp.tech.LAYER.Metal4filler, size=(5, 5)),
+        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -40)],
         exclude_layers=[
             (ihp.tech.LAYER.Metal4drawing, 10),
             (ihp.tech.LAYER.Passivdrawing, 10),
@@ -2929,8 +3098,15 @@ if do_fill_m5:
 if do_fill:
     # topmetal1 fill
     c.fill(
-        fill_cell=fill_cell(layer=ihp.tech.LAYER.TopMetal1filler, size=(9, 9)),
-        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -50)],
+        fill_cell=fill_cell(layer=ihp.tech.LAYER.TopMetal1drawing, size=(30, 30)),
+        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -10)],
+        exclude_layers=[(ihp.tech.LAYER.TopMetal1drawing, 10), (ihp.tech.LAYER.TopMetal2drawing, 20)],
+        x_space=1.65,
+        y_space=1.65,
+    )
+    c.fill(
+        fill_cell=fill_cell(layer=ihp.tech.LAYER.TopMetal1filler, size=(10, 10)),
+        fill_layers=[(ihp.tech.LAYER.EdgeSealboundary, -10)],
         exclude_layers=[(ihp.tech.LAYER.TopMetal1drawing, 10), (ihp.tech.LAYER.TopMetal2drawing, 20)],
         x_space=3,
         y_space=3,
@@ -3023,3 +3199,40 @@ pd.ymin = 0
 # pd.show()
 pd.write_gds(powdet_gds_filename, with_metadata=False)
 
+
+# ============================================================
+# EM sub-structure export
+# ============================================================
+# Write the BLC, WPD, BPF and six-port core copies prepared above (Palace port
+# markers on layers 201..207) to verification/em/layout, so the EM flow
+# simulates the same structures that are instantiated in the top-level layout.
+# Only the design frequency is encoded in the file names, which must match the
+# BLC_EM_NAME, WPD_EM_NAME, BPF_EM_NAME and CORE_EM_NAME variables in the
+# Makefile. 
+write_em_gds(
+    blc_em,
+    f"sparx{f / 1e9:.0f}_blc.gds",
+    cell_name="sparx_blc_em_sim",
+)
+
+write_em_gds(
+    wpd_em,
+    f"sparx{f / 1e9:.0f}_wpd.gds",
+    cell_name="sparx_wpd_em_sim",
+)
+
+write_em_gds(
+    bpf_em,
+    f"sparx{f / 1e9:.0f}_bpf.gds",
+    cell_name="sparx_bpf_em_sim",
+)
+
+six_port_core.xmin = 0
+six_port_core.ymin = 0
+write_em_gds(
+    six_port_core,
+    f"sparx{f / 1e9:.0f}_core.gds",
+    cell_name="sparx_core_em_sim",
+)
+
+# six_port_core.show()

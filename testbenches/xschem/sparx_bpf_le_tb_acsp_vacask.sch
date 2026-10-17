@@ -44,7 +44,7 @@ control
   postprocess(PYTHON, \\"../plot_simulations/plot_n_port_tb_acsp_vacask.py\\")
 endc
 "}
-C {simulator_commands_shown.sym} 1640 -1330 0 0 {name=Libs_VACASK
+C {simulator_commands_shown.sym} 1640 -1270 0 0 {name=Libs_VACASK
 simulator=vacask
 only_toplevel=false
 value="
@@ -58,7 +58,7 @@ load \\"capacitor.osdi\\"
 load \\"inductor.osdi\\"
 include \\"../../../netlist/spectre/sparx_bpf_le.inc\\"
 "}
-C {launcher.sym} 1380 -1330 0 0 {name=h1
+C {launcher.sym} 1700 -1380 0 0 {name=h1
 descr="Simulate VACASK"
 tclcommand="
 # Setup the default simulation commands if not already set up

@@ -27,9 +27,9 @@ N 1160 -860 1240 -860 {lab=v3}
 N 1240 -860 1320 -860 {lab=v3}
 N 1240 -760 1240 -740 {lab=#net3}
 N 1480 -680 1480 -640 {lab=GND}
-N 1480 -940 1560 -940 {lab=#net4}
-N 1480 -940 1480 -820 {lab=#net4}
-N 1160 -940 1480 -940 {lab=#net4}
+N 1480 -940 1560 -940 {lab=v2}
+N 1480 -940 1480 -820 {lab=v2}
+N 1160 -940 1480 -940 {lab=v2}
 C {devices/lab_pin.sym} 800 -900 0 0 {name=lvin sig_type=std_logic lab=v1}
 C {devices/lab_pin.sym} 1560 -940 0 1 {name=lvout sig_type=std_logic lab=v2}
 C {devices/res.sym} 880 -790 0 1 {name=R1 value=50}
@@ -65,7 +65,7 @@ load \\"capacitor.osdi\\"
 load \\"inductor.osdi\\"
 include \\"../../../netlist/spectre/sparx_wpd_le.inc\\"
 "}
-C {launcher.sym} 1380 -1330 0 0 {name=h1
+C {launcher.sym} 1700 -1440 0 0 {name=h1
 descr="Simulate VACASK"
 tclcommand="
 # Setup the default simulation commands if not already set up

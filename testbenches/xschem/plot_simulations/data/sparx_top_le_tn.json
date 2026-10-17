@@ -1,0 +1,288 @@
+{
+  "variant": "m1",
+  "noisescale": [
+    0.01,
+    0.0316227766,
+    0.1
+  ],
+  "df_Hz": 101725389.36439283,
+  "rows": {
+    "out1": [
+      {
+        "f_Hz": 500000000.0,
+        "asd_linear_V": 1.8256367438464166e-08,
+        "asd_hbnoise_V": 1.8056236562584416e-08,
+        "asd_quiescent_V": 1.3601304040163184e-08,
+        "asd_top_rung_normalised_V": 1.8711759262854363e-08,
+        "nf_dsb_transient_dB": 55.651814299678634,
+        "nf_dsb_hbnoise_dB": 55.555821626051326,
+        "nf_dsb_quiescent_dB": 53.094887053777384,
+        "nf_dsb_pnoise_dB": 55.60291204026501
+      },
+      {
+        "f_Hz": 1000000000.0,
+        "asd_linear_V": 1.1229161960946847e-08,
+        "asd_hbnoise_V": 1.0702629668871863e-08,
+        "asd_quiescent_V": 7.972900419652527e-09,
+        "asd_top_rung_normalised_V": 1.1574014008523854e-08,
+        "nf_dsb_transient_dB": 53.164513550112815,
+        "nf_dsb_hbnoise_dB": 52.74456036389437,
+        "nf_dsb_quiescent_dB": 50.18733097213937,
+        "nf_dsb_pnoise_dB": 52.788905889045246
+      },
+      {
+        "f_Hz": 2000000000.0,
+        "asd_linear_V": 3.652424087115013e-09,
+        "asd_hbnoise_V": 3.3268331057526713e-09,
+        "asd_quiescent_V": 2.591600900589745e-09,
+        "asd_top_rung_normalised_V": 3.7344573041621205e-09,
+        "nf_dsb_transient_dB": 51.111527566534356,
+        "nf_dsb_hbnoise_dB": 50.2933419555647,
+        "nf_dsb_quiescent_dB": 48.12650511181726,
+        "nf_dsb_pnoise_dB": 50.33242916910827
+      },
+      {
+        "f_Hz": 3000000000.0,
+        "asd_linear_V": 1.5992706694240258e-09,
+        "asd_hbnoise_V": 1.4559410489975354e-09,
+        "asd_quiescent_V": 1.1789644928943273e-09,
+        "asd_top_rung_normalised_V": 1.6307721965967439e-09,
+        "nf_dsb_transient_dB": 50.13970615039521,
+        "nf_dsb_hbnoise_dB": 49.207522095308285,
+        "nf_dsb_quiescent_dB": 47.42494107394053,
+        "nf_dsb_pnoise_dB": 49.241390046367044
+      }
+    ],
+    "out2": [
+      {
+        "f_Hz": 500000000.0,
+        "asd_linear_V": 2.377529295236482e-08,
+        "asd_hbnoise_V": 2.0854395836589322e-08,
+        "asd_quiescent_V": 1.3601303212968729e-08,
+        "asd_top_rung_normalised_V": 2.4096119586811443e-08,
+        "nf_dsb_transient_dB": 59.19267449278692,
+        "nf_dsb_hbnoise_dB": 58.05386142713931,
+        "nf_dsb_quiescent_dB": 54.34151074267334,
+        "nf_dsb_pnoise_dB": 57.99209977359689
+      },
+      {
+        "f_Hz": 1000000000.0,
+        "asd_linear_V": 1.3765468715110874e-08,
+        "asd_hbnoise_V": 1.2351688277761427e-08,
+        "asd_quiescent_V": 7.972899055197268e-09,
+        "asd_top_rung_normalised_V": 1.396929696922331e-08,
+        "nf_dsb_transient_dB": 56.14619135517998,
+        "nf_dsb_hbnoise_dB": 55.201983667743086,
+        "nf_dsb_quiescent_dB": 51.40011301274761,
+        "nf_dsb_pnoise_dB": 55.14316119083848
+      },
+      {
+        "f_Hz": 2000000000.0,
+        "asd_linear_V": 3.920633702236931e-09,
+        "asd_hbnoise_V": 3.786009507511534e-09,
+        "asd_quiescent_V": 2.591600957782004e-09,
+        "asd_top_rung_normalised_V": 3.990123311735093e-09,
+        "nf_dsb_transient_dB": 52.948684916553844,
+        "nf_dsb_hbnoise_dB": 52.63727437559989,
+        "nf_dsb_quiescent_dB": 49.34817483523924,
+        "nf_dsb_pnoise_dB": 52.58518971219762
+      },
+      {
+        "f_Hz": 3000000000.0,
+        "asd_linear_V": 1.5224727450379861e-09,
+        "asd_hbnoise_V": 1.635673942880529e-09,
+        "asd_quiescent_V": 1.1789649524968486e-09,
+        "asd_top_rung_normalised_V": 1.5527228491914711e-09,
+        "nf_dsb_transient_dB": 50.93424511127698,
+        "nf_dsb_hbnoise_dB": 51.420819227534956,
+        "nf_dsb_quiescent_dB": 48.645987388696135,
+        "nf_dsb_pnoise_dB": 51.37543805441491
+      }
+    ],
+    "out3": [
+      {
+        "f_Hz": 500000000.0,
+        "asd_linear_V": 2.2000773521295323e-08,
+        "asd_hbnoise_V": 1.8747541061311523e-08,
+        "asd_quiescent_V": 1.3601304007476152e-08,
+        "asd_top_rung_normalised_V": 2.2421740475192475e-08,
+        "nf_dsb_transient_dB": 54.978186638726115,
+        "nf_dsb_hbnoise_dB": 53.588064519715466,
+        "nf_dsb_quiescent_dB": 50.80080251699091,
+        "nf_dsb_pnoise_dB": 53.623779848028555
+      },
+      {
+        "f_Hz": 1000000000.0,
+        "asd_linear_V": 1.0784748321120144e-08,
+        "asd_hbnoise_V": 1.1111846781077108e-08,
+        "asd_quiescent_V": 7.972900361910013e-09,
+        "asd_top_rung_normalised_V": 1.0898134193496487e-08,
+        "nf_dsb_transient_dB": 50.50802439659453,
+        "nf_dsb_hbnoise_dB": 50.76470417777366,
+        "nf_dsb_quiescent_dB": 47.88161248560525,
+        "nf_dsb_pnoise_dB": 50.79792295205783
+      },
+      {
+        "f_Hz": 2000000000.0,
+        "asd_linear_V": 3.782102345470449e-09,
+        "asd_hbnoise_V": 3.4408002680965504e-09,
+        "asd_quiescent_V": 2.591600892514838e-09,
+        "asd_top_rung_normalised_V": 3.846831596985156e-09,
+        "nf_dsb_transient_dB": 49.10711702027619,
+        "nf_dsb_hbnoise_dB": 48.27822335697493,
+        "nf_dsb_quiescent_dB": 45.81907546120096,
+        "nf_dsb_pnoise_dB": 48.3069466255537
+      },
+      {
+        "f_Hz": 3000000000.0,
+        "asd_linear_V": 1.6514114995706077e-09,
+        "asd_hbnoise_V": 1.5005078416641624e-09,
+        "asd_quiescent_V": 1.178964501603003e-09,
+        "asd_top_rung_normalised_V": 1.6746368407917871e-09,
+        "nf_dsb_transient_dB": 48.10452003234876,
+        "nf_dsb_hbnoise_dB": 47.14912666404182,
+        "nf_dsb_quiescent_dB": 45.109796152330254,
+        "nf_dsb_pnoise_dB": 47.17354413159673
+      }
+    ],
+    "out4": [
+      {
+        "f_Hz": 500000000.0,
+        "asd_linear_V": 1.7576448906979893e-08,
+        "asd_hbnoise_V": 2.0724836174778346e-08,
+        "asd_quiescent_V": 1.3601303294814054e-08,
+        "asd_top_rung_normalised_V": 1.7882784965348663e-08,
+        "nf_dsb_transient_dB": 54.30306601288593,
+        "nf_dsb_hbnoise_dB": 55.73401779891453,
+        "nf_dsb_quiescent_dB": 52.0758084661319,
+        "nf_dsb_pnoise_dB": 55.66853702484446
+      },
+      {
+        "f_Hz": 1000000000.0,
+        "asd_linear_V": 1.3019523747248559e-08,
+        "asd_hbnoise_V": 1.2275839188610658e-08,
+        "asd_quiescent_V": 7.972899177428478e-09,
+        "asd_top_rung_normalised_V": 1.3155704777915645e-08,
+        "nf_dsb_transient_dB": 53.39075149270127,
+        "nf_dsb_hbnoise_dB": 52.87694944037441,
+        "nf_dsb_quiescent_dB": 49.128599469122726,
+        "nf_dsb_pnoise_dB": 52.81402001855712
+      },
+      {
+        "f_Hz": 2000000000.0,
+        "asd_linear_V": 4.2435769197612255e-09,
+        "asd_hbnoise_V": 3.765087664407122e-09,
+        "asd_quiescent_V": 2.5916009194451057e-09,
+        "asd_top_rung_normalised_V": 4.3285455877955996e-09,
+        "nf_dsb_transient_dB": 51.33956790172161,
+        "nf_dsb_hbnoise_dB": 50.29237834605969,
+        "nf_dsb_quiescent_dB": 47.05141304132397,
+        "nf_dsb_pnoise_dB": 50.23569213900694
+      },
+      {
+        "f_Hz": 3000000000.0,
+        "asd_linear_V": 1.678127701879195e-09,
+        "asd_hbnoise_V": 1.6275465449335278e-09,
+        "asd_quiescent_V": 1.1789648794064088e-09,
+        "asd_top_rung_normalised_V": 1.7079910856620383e-09,
+        "nf_dsb_transient_dB": 49.45514373576163,
+        "nf_dsb_hbnoise_dB": 49.049747714781496,
+        "nf_dsb_quiescent_dB": 46.31739678374099,
+        "nf_dsb_pnoise_dB": 48.99949399847688
+      }
+    ],
+    "i": [
+      {
+        "f_Hz": 500000000.0,
+        "asd_linear_V": 2.830362114792712e-08,
+        "asd_hbnoise_V": 2.7584981471748342e-08,
+        "asd_quiescent_V": 1.9235154378684594e-08,
+        "asd_top_rung_normalised_V": 2.8950108125511224e-08,
+        "nf_dsb_transient_dB": 54.08892657410036,
+        "nf_dsb_hbnoise_dB": 53.865291745642146,
+        "nf_dsb_quiescent_dB": 50.73376473053299,
+        "nf_dsb_pnoise_dB": 53.85050454054265
+      },
+      {
+        "f_Hz": 1000000000.0,
+        "asd_linear_V": 1.713862392645193e-08,
+        "asd_hbnoise_V": 1.6343490490489337e-08,
+        "asd_quiescent_V": 1.1275394122311756e-08,
+        "asd_top_rung_normalised_V": 1.7352171655965896e-08,
+        "nf_dsb_transient_dB": 51.45064912512468,
+        "nf_dsb_hbnoise_dB": 51.03515736570372,
+        "nf_dsb_quiescent_dB": 47.81123016347395,
+        "nf_dsb_pnoise_dB": 51.02088027002141
+      },
+      {
+        "f_Hz": 2000000000.0,
+        "asd_linear_V": 5.088384323369048e-09,
+        "asd_hbnoise_V": 5.040020960405346e-09,
+        "asd_quiescent_V": 3.665078752091037e-09,
+        "asd_top_rung_normalised_V": 5.204240509725162e-09,
+        "nf_dsb_transient_dB": 48.61249927306574,
+        "nf_dsb_hbnoise_dB": 48.52197317698081,
+        "nf_dsb_quiescent_dB": 45.75789531341894,
+        "nf_dsb_pnoise_dB": 48.509852018578904
+      },
+      {
+        "f_Hz": 3000000000.0,
+        "asd_linear_V": 2.1796183200075082e-09,
+        "asd_hbnoise_V": 2.1897984256519283e-09,
+        "asd_quiescent_V": 1.6673061978134102e-09,
+        "asd_top_rung_normalised_V": 2.2269763620957626e-09,
+        "nf_dsb_transient_dB": 47.45423457905613,
+        "nf_dsb_hbnoise_dB": 47.367842531254325,
+        "nf_dsb_quiescent_dB": 45.06086606041794,
+        "nf_dsb_pnoise_dB": 47.357750138561656
+      }
+    ],
+    "q": [
+      {
+        "f_Hz": 500000000.0,
+        "asd_linear_V": 3.2452892946046286e-08,
+        "asd_hbnoise_V": 2.7946241219594524e-08,
+        "asd_quiescent_V": 1.923515448833493e-08,
+        "asd_top_rung_normalised_V": 3.3001710789605536e-08,
+        "nf_dsb_transient_dB": 52.960516489172484,
+        "nf_dsb_hbnoise_dB": 51.661667540231846,
+        "nf_dsb_quiescent_dB": 48.41715237358803,
+        "nf_dsb_pnoise_dB": 51.64201987158233
+      },
+      {
+        "f_Hz": 1000000000.0,
+        "asd_linear_V": 1.65523548683441e-08,
+        "asd_hbnoise_V": 1.6558148573947794e-08,
+        "asd_quiescent_V": 1.1275394309692257e-08,
+        "asd_top_rung_normalised_V": 1.6610958442099727e-08,
+        "nf_dsb_transient_dB": 48.822098678015024,
+        "nf_dsb_hbnoise_dB": 48.82225195316243,
+        "nf_dsb_quiescent_dB": 45.485043803818364,
+        "nf_dsb_pnoise_dB": 48.802885869375714
+      },
+      {
+        "f_Hz": 2000000000.0,
+        "asd_linear_V": 6.1407025444081686e-09,
+        "asd_hbnoise_V": 5.100519810058662e-09,
+        "asd_quiescent_V": 3.665078761488287e-09,
+        "asd_top_rung_normalised_V": 6.272953457208734e-09,
+        "nf_dsb_transient_dB": 47.903453824098506,
+        "nf_dsb_hbnoise_dB": 46.28363113376557,
+        "nf_dsb_quiescent_dB": 43.41605917509465,
+        "nf_dsb_pnoise_dB": 46.26602255367602
+      },
+      {
+        "f_Hz": 3000000000.0,
+        "asd_linear_V": 2.239250866810544e-09,
+        "asd_hbnoise_V": 2.2137011239113594e-09,
+        "asd_quiescent_V": 1.6673061516721042e-09,
+        "asd_top_rung_normalised_V": 2.2757451438250126e-09,
+        "nf_dsb_transient_dB": 45.326738902824,
+        "nf_dsb_hbnoise_dB": 45.095453519699454,
+        "nf_dsb_quiescent_dB": 42.69586633101925,
+        "nf_dsb_pnoise_dB": 45.079717045578604
+      }
+    ]
+  },
+  "source": "sparx_top_le_tb_tn_vacask"
+}

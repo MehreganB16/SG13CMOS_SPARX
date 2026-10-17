@@ -12,9 +12,30 @@ POWDET = sparx_powdet_sbd
 
 .DEFAULT_GOAL := help
 
+# PDK Guard
+# Override with: make <target> REQUIRED_PDK=<pdk>, an empty value skips the check
+REQUIRED_PDK ?= ihp-sg13g2
+
+# Goals that do not read the PDK
+PDK_FREE_GOALS = help clean
+
+ifneq ($(REQUIRED_PDK),)
+ifneq ($(filter-out $(PDK_FREE_GOALS),$(or $(MAKECMDGOALS),$(.DEFAULT_GOAL))),)
+ifneq ($(PDK),$(REQUIRED_PDK))
+$(error PDK is "$(PDK)", but this chip needs "$(REQUIRED_PDK)". Run `sak-pdk $(REQUIRED_PDK)` in this shell and retry, or pass REQUIRED_PDK= to skip this check)
+endif
+endif
+endif
+# ========================================================================
+
+
 # Version for release target
 # Override with: make <target> VERSION=<version>
 VERSION ?= 2.0.0
+
+# Extra options for the sak-open.py file browser (e.g. --all to include build outputs)
+# Override with: make open OPEN_ARGS=<options>
+OPEN_ARGS ?=
 
 # Cell name for verification targets (default: top-level cell)
 # Override with: make <target> CELL=<cellname>
@@ -24,25 +45,38 @@ CELL ?= $(TOP)
 # Override with: make <target> EXT_MODE=<1|2|3>
 EXT_MODE ?= 3
 
-# full-RC extresist threshold in mOhm (sak-pex.sh -t, only used in EXT_MODE=3; default: 10000 = 10 Ohm)
+# full-RC extresist threshold in mOhm (sak-pex.sh -t, only used in EXT_MODE=3; default: 1000 = 1 Ohm)
 # Override with: make <target> THRESHOLD=<mOhm>
-THRESHOLD ?= 10000
+THRESHOLD ?= 1000
 
-# full-RC extresist minres in mOhm (sak-pex.sh -r, only used in EXT_MODE=3; default: 1000 = 1 Ohm)
+# full-RC extresist minres in mOhm (sak-pex.sh -r, only used in EXT_MODE=3; default: 100 = 0.1 Ohm)
 # Override with: make <target> MINRES=<mOhm>
-MINRES ?= 1000
+MINRES ?= 100
 
-# full-RC extresist mindelay in ps (sak-pex.sh -y, only used in EXT_MODE=3; default: 1; 0 = gate by resistance)
+# full-RC extresist mindelay in ps (sak-pex.sh -y, only used in EXT_MODE=3; default: 0, gate by resistance)
 # Override with: make <target> MINDELAY=<ps>
-MINDELAY ?= 1
+MINDELAY ?= 0
 
 # KLayout DRC level: precheck, macro, or regular (sak-drc.sh -l, only used by klayout-drc; default: macro)
 # Override with: make <target> DRC_LEVEL=<precheck|macro|regular>
 DRC_LEVEL ?= macro
 
+# Supply pins that the flat PEX extraction merges into one node, they are dropped from the generated <CELL>_pex.sym so it matches the extracted netlist.
+# Empty by default: the power detector keeps vdd and vss as separate ports in both the Magic and the KPEX extraction. Pads that repeat a pin name are dropped down to one pin the same way, only the pin boxes go and the labels stay.
+# Override with: make <target> PEX_MERGED_PINS="<pin> <pin> ..."
+PEX_MERGED_PINS ?=
+
 # Floating-point precision (significant digits) for Xschem's ev function
 # Override with: make <target> EV_PRECISION=<digits>
 EV_PRECISION ?= 5
+
+# Power-detector design variant for the VACASK testbenches that instantiate the detector, the receiver benches
+# sparx_top_le_tb_*_vacask included, rewritten from the emitted netlist by scripts/powdet_variant.py: m1 (as
+# fabricated, the default), m16 (Schottky diodes with 16 parallel cells), m1_pex (the fabricated design with its
+# Magic full-RC parasitics, netlist/pex/<CELL>_magic_pex_3.spice). A variant runs in simulations/<VARIANT>/ and its
+# plots and data files carry the variant as a suffix.
+# Override with: make sim-xschem TB=sparx_powdet_sbd_tb_pss_vacask VARIANT=<m16|m1_pex>
+VARIANT ?=
 
 # Design frequency in GHz (default: 160)
 # Override with: make build-layout FREQ=<frequency_in_GHz>
@@ -53,23 +87,13 @@ FREQ ?= 160
 NO_FILL ?= 0
 NO_FILL_M5 ?= 0
 
-# Characteristic impedance and substrate parameters for EM simulation
-# Override with: make sim-blc-em FREQ=<GHz> SIGNAL_CROSS_SECTION=<metal> GROUND_CROSS_SECTION=<metal> Z0=<Ohms> E_R=<relative_permittivity>
+# Port settings for the EM simulation, passed to palace_sim.py.
+# These describe the structures as scripts/six_port_gen.py builds them and must
+# match signal_cross_section, ground_cross_section and Z0 there.
+# Override with: make sim-blc-em SIGNAL_CROSS_SECTION=<metal> GROUND_CROSS_SECTION=<metal> Z0=<Ohms>
 SIGNAL_CROSS_SECTION ?= TM2
 GROUND_CROSS_SECTION ?= M5
 Z0 ?= 50
-E_R ?= 4.1
-
-# BPF-specific filter parameters for EM simulation
-# Override with: make sim-bpf-em BANDWIDTH=<GHz> FILTER_TYPE=<butter|cheby|ellip> FILTER_ORDER=<N> RIPPLE_DB=<dB>
-BANDWIDTH ?= 1
-FILTER_TYPE ?= butter
-FILTER_ORDER ?= 3
-RIPPLE_DB ?= 3
-
-# Additional config parameter for the WPD simulation (C or U)
-# Override with: make sim-wpd-em FREQ=<GHz> SIGNAL_CROSS_SECTION=<metal> GROUND_CROSS_SECTION=<metal> Z0=<Ohms> E_R=<relative_permittivity> CONFIG=<config_name>
-CONFIG ?= U
 
 # Palace number of processors for EM simulation
 # Override with: make sim-blc-em NP=<num_processors>
@@ -81,16 +105,28 @@ START_FREQ ?= 60
 STOP_FREQ ?= 300
 STEP_FREQ ?= 20
 
-# S-parameter to lumped element netlist conversion with snp2le (always the de-embedded EM result)
-# Override with: make snp2le SNP=<file.sNp> ORDER=<N> LE_FORMAT=<spice|spectre> LE_OUT=<output_path>
-SNP ?= verification/em/s-parameter/sparx_bpf_f_160GHz_bw_1GHz_sig_TM2_gnd_M5_z0_50Ohm_er_4_1_butter_ord_3_deembedded.s2p
+# Base names of the EM structures that build-layout writes to verification/em/layout,
+# and of every Palace output derived from them. Only the design frequency is encoded,
+# so re-parametrizing a structure in scripts/six_port_gen.py does not rename anything.
+# These must stay in sync with the write_em_gds() calls in scripts/six_port_gen.py.
+BLC_EM_NAME  := sparx$(FREQ)_blc
+WPD_EM_NAME  := sparx$(FREQ)_wpd
+BPF_EM_NAME  := sparx$(FREQ)_bpf
+CORE_EM_NAME := sparx$(FREQ)_core
+
+# S-parameter to lumped element netlist conversion with snp2le (the raw EM result)
+# Override with: make snp2le SNP=<file.sNp> ORDER=<N> LE_FORMAT=<spice|spectre> LE_OUT=<output_path> LE_NOISE=<noiseless|thermal>
+SNP ?= $(EM_SPARAM_DIR)/$(BPF_EM_NAME).s2p
 ORDER ?= 13
 LE_FORMAT ?= spice
 LE_OUT ?= netlist/spice/sparx_bpf_le.spice
+# noiseless: the fit's resistors carry noisy=0. thermal: snp2le --thermal-noise adds the passive's own
+# thermal noise, kT(I - S S^H) at the ports.
+LE_NOISE ?= noiseless
 
 # EM run name for the copy-sparam target (base name of the GDS/Touchstone files)
 # Override with: make copy-sparam SPARAM=<em_run_name>
-SPARAM ?= sparx_blc_$(FREQ)GHz_$(Z0)Ohm_$(SIGNAL_CROSS_SECTION)_$(GROUND_CROSS_SECTION)_e_r_$(subst .,_,$(E_R))
+SPARAM ?= $(BLC_EM_NAME)
 
 # Folder structure
 XSCHEM_SCH_DIR  	:= schematic/xschem
@@ -108,34 +144,48 @@ NET_SPECTRE_DIR 	:= netlist/spectre
 LVS_RPT_DIR 		:= verification/lvs
 DRC_RPT_DIR 		:= verification/drc
 EM_RPT_DIR 			:= verification/em
+EM_LAY_DIR 			:= verification/em/layout
 EM_SPARAM_DIR 		:= verification/em/s-parameter
 PALACE_SCRIPTS_DIR 	:= $(PDK_ROOT)/$(PDK)/libs.tech/palace/scripts
 
 
 # Help Target
 help: ## Show this help message
-	@echo 'Usage: make <target> [CELL=<cellname>] [EXT_MODE=<1|2|3>] [THRESHOLD=<mOhm>] [MINRES=<mOhm>] [MINDELAY=<ps>] [DRC_LEVEL=<precheck|macro|regular>] [EV_PRECISION=<digits>] [FREQ=<GHz>] [START_FREQ=<GHz>] [STOP_FREQ=<GHz>] [STEP_FREQ=<GHz>] [NO_FILL=0|1] [NO_FILL_M5=0|1]'
+	@echo 'Usage: make <target> [CELL=<cellname>] [EXT_MODE=<1|2|3>] [THRESHOLD=<mOhm>] [MINRES=<mOhm>] [MINDELAY=<ps>] [DRC_LEVEL=<precheck|macro|regular>] [PEX_MERGED_PINS="<pin> ..."] [EV_PRECISION=<digits>] [FREQ=<GHz>] [START_FREQ=<GHz>] [STOP_FREQ=<GHz>] [STEP_FREQ=<GHz>] [NO_FILL=0|1] [NO_FILL_M5=0|1] [TB=<testbenchname>] [SCRIPT=<scriptname>] [VERSION=<version>] [OPEN_ARGS=<options>]'
 	@echo ''
 	@echo 'Available targets:'
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_.-]+:.*## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-20s %s\n", $$1, $$2}'
 	@echo ''
 	@echo 'CELL defaults to $(TOP). Override to verify subcells.'
 	@echo 'EXT_MODE defaults to 3 (full-RC). 1=C-decoupled, 2=C-coupled.'
-	@echo 'THRESHOLD/MINRES/MINDELAY are full-RC (EXT_MODE=3) extresist settings for magic-pex (defaults 10000 mOhm / 1000 mOhm / 1 ps).'
+	@echo 'The extracted netlists carry the mode as suffix: netlist/pex/<CELL>_magic_pex_<EXT_MODE>.spice and <CELL>_klayout_pex_<EXT_MODE>.spice.'
+	@echo 'THRESHOLD/MINRES/MINDELAY are full-RC (EXT_MODE=3) extresist settings for magic-pex (defaults 1000 mOhm / 100 mOhm / 0 ps, gating by resistance, the Magic defaults are 10000 / 1000 / 1).'
 	@echo 'DRC_LEVEL defaults to macro. Sets the KLayout DRC level for klayout-drc (precheck|macro|regular).'
+	@echo 'PEX_MERGED_PINS is empty by default. Lists the supply pins that the flat extraction merges, they are dropped from the generated PEX symbol.'
 	@echo 'FREQ defaults to 160 (GHz). Override for build-layout.'
 	@echo 'NO_FILL defaults to 0 (fill enabled). Set to 1 to disable metal fill.'
 	@echo 'NO_FILL_M5 defaults to 0 (M5 fill enabled). Set to 1 to disable M5 ground fill.'
 	@echo 'START_FREQ, STOP_FREQ, STEP_FREQ default to 60, 300, and 20 (GHz) for build-layout-sweep.'
 	@echo 'EV_PRECISION defaults to 5 significant digits for Xschem ev function.'
-	@echo 'TB selects the Xschem testbench for sim-xschem (e.g. sparx_bpf_le_tb_acsp_ngspice).'
-	@echo 'SCRIPT selects the plotting script for sim-view-xschem (e.g. plot_n_port_tb_acsp_ngspice).'
+	@echo 'TB selects the Xschem testbench for sim-xschem (default: sparx_bpf_le_tb_acsp_ngspice).'
+	@echo 'SCRIPT selects the plotting script for sim-view-xschem (default: plot_n_port_tb_acsp_ngspice).'
+	@echo 'VARIANT selects a power-detector design variant for sim-xschem (m16, m1_pex), empty runs the design as fabricated.'
 	@echo 'snp2le: SNP=<file.sNp> ORDER=<N> LE_FORMAT=<spice|spectre> LE_OUT=<path>.'
-	@echo 'EM sim: NP=<procs> Z0=<Ohms> E_R=<e_r> SIGNAL_CROSS_SECTION=<metal> GROUND_CROSS_SECTION=<metal>.'
-	@echo 'sim-bpf-em: BANDWIDTH=<GHz> FILTER_TYPE=<butter|cheby|ellip> FILTER_ORDER=<N> RIPPLE_DB=<dB>. sim-wpd-em: CONFIG=<C|U>.'
+	@echo 'EM sim: solves the structures written by build-layout to $(EM_LAY_DIR), so run build-layout first.'
+	@echo 'EM sim: NP=<procs> Z0=<Ohms> SIGNAL_CROSS_SECTION=<metal> GROUND_CROSS_SECTION=<metal> are the port settings of the solve.'
 	@echo 'view-em-sim: FILE_NAME=<name_with_extension>. copy-sparam: SPARAM=<em_run_name>. release: VERSION=<version>.'
 	@echo 'regression is the fast tool/flow smoke test (committed EM result). regression-nightly also runs the WPD AWS Palace EM solve.'
+	@echo 'VERSION defaults to $(VERSION). Used by the release target.'
+	@echo 'OPEN_ARGS passes extra options to sak-open.py for the open target (e.g. --all).'
+	@echo 'REQUIRED_PDK defaults to $(REQUIRED_PDK). Every target except help and clean aborts if $$PDK differs.'
 .PHONY: help
+# ================================================================================================
+
+
+# Open Target
+open: ## Open the design files of this folder in the sak-open.py file browser (needs the VNC/X11 desktop)
+	sak-open.py $(OPEN_ARGS) .
+.PHONY: open
 # ================================================================================================
 
 
@@ -175,9 +225,10 @@ build-top: ## Build TOP cell (usage: make build-top [FREQ=<GHz>])
 
 
 # Rendering Target
-render-gds: ## Render an image from the GDS of the TOP cell (usage: make render-gds [FREQ=<GHz>])
+render-gds: ## Render images from the GDS of the TOP cell using sak-render.py (usage: make render-gds [FREQ=<GHz>])
 	mkdir -p $(RENDER_IMG_DIR)/
-	python3 $(SCRIPTS_DIR)/lay2img.py $(LAY_DIR)/sparx$(FREQ)_top.gds $(RENDER_IMG_DIR)/sparx$(FREQ)_top.png --width 2048 --oversampling 4
+	sak-render.py -t ihp-sg13g2 -w 2048 -s 4 -o $(RENDER_IMG_DIR)/sparx$(FREQ)_top $(LAY_DIR)/sparx$(FREQ)_top.gds
+	sak-render.py -t ihp-sg13g2 -w 2048 -s 4 -b black -l tm2,tv2,TopMetal2.filler,passiv -o $(RENDER_IMG_DIR)/sparx$(FREQ)_top_black_TM2 $(LAY_DIR)/sparx$(FREQ)_top.gds
 .PHONY: render-gds
 # ================================================================================================
 
@@ -248,8 +299,24 @@ magic-lvs: ## Run Magic + Netgen LVS of the CELL cell (usage: make magic-lvs [CE
 
 
 # PEX Targets
+symbol-pex: ## Build the Xschem PEX symbol <CELL>_pex.sym from <CELL>.sym (usage: make symbol-pex [CELL=<cellname>] [PEX_MERGED_PINS="<pin> ..."])
+	@if [ ! -f $(XSCHEM_SCH_DIR)/$(CELL).sym ]; then \
+		echo "No symbol $(XSCHEM_SCH_DIR)/$(CELL).sym found, skipping PEX symbol generation."; \
+	else \
+		sed 's/type=subcircuit/type=primitive/' $(XSCHEM_SCH_DIR)/$(CELL).sym > $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym; \
+		if ! grep -q 'type=primitive' $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym; then \
+			rm -f $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym; \
+			echo "ERROR: $(XSCHEM_SCH_DIR)/$(CELL).sym declares neither type=subcircuit nor type=primitive!"; \
+			exit 1; \
+		fi; \
+		python3 $(SCRIPTS_DIR)/prune_pex_symbol.py $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym --merged $(PEX_MERGED_PINS); \
+		echo "Wrote $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym (copy of $(CELL).sym with type=primitive)."; \
+	fi
+.PHONY: symbol-pex
+
 klayout-pex: ## Run Parasitic Extraction with KPEX of the CELL cell (usage: make klayout-pex [CELL=<cellname>] [EXT_MODE=<1|2|3>])
 	mkdir -p $(NET_PEX_DIR)
+	$(MAKE) symbol-pex CELL=$(CELL)
 	PDK_UNDERSCORED=$$(echo $$PDK | sed -e 's/-/_/g'); \
 	case $(EXT_MODE) in \
 		1) echo "WARNING: KPEX does not support C-decoupled (C) mode yet, using C-coupled (CC) mode instead."; KPEX_MODE=CC ;; \
@@ -265,32 +332,35 @@ klayout-pex: ## Run Parasitic Extraction with KPEX of the CELL cell (usage: make
 	--magic \
 	--magic_mode $$KPEX_MODE \
 	--out_dir $(NET_PEX_DIR) \
-	--out_spice $(NET_PEX_DIR)/$(CELL)_klayout_pex.spice
+	--out_spice $(NET_PEX_DIR)/$(CELL)_klayout_pex_$(EXT_MODE).spice
 #	--2.5D
 #	--mode $$KPEX_MODE
-	sed -i 's/$(CELL)/$(CELL)_pex/g' $(NET_PEX_DIR)/$(CELL)_klayout_pex.spice
+	sed -i 's/$(CELL)/$(CELL)_pex/g' $(NET_PEX_DIR)/$(CELL)_klayout_pex_$(EXT_MODE).spice
 	rm -rf $(NET_PEX_DIR)/$(CELL)__$(CELL)
 	rm -f $(CELL).nodes $(CELL).sim $(NET_PEX_DIR)/$(CELL).nodes $(NET_PEX_DIR)/$(CELL).sim
 	rm -f $(NET_PEX_DIR)/$(CELL).ext $(NET_PEX_DIR)/$(CELL).res.ext
 	@if [ -f $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym ]; then \
-		echo "Reordering pins in $(CELL)_klayout_pex.spice to match $(CELL)_pex.sym..."; \
-		sak-pin-reorder.py $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym $(NET_PEX_DIR)/$(CELL)_klayout_pex.spice --format spice; \
+		echo "Reordering pins in $(CELL)_klayout_pex_$(EXT_MODE).spice to match $(CELL)_pex.sym..."; \
+		sak-pin-reorder.py $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym $(NET_PEX_DIR)/$(CELL)_klayout_pex_$(EXT_MODE).spice --format spice; \
 	else \
 		echo "No symbol $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym found, skipping pin reorder."; \
 	fi
+	python3 $(SCRIPTS_DIR)/check_pex_ports.py $(NET_PEX_DIR)/$(CELL)_klayout_pex_$(EXT_MODE).spice
 .PHONY: klayout-pex
 
 magic-pex: ## Run Parasitic Extraction with Magic of the CELL cell (usage: make magic-pex [CELL=<cellname>] [EXT_MODE=<1|2|3>] [THRESHOLD=<mOhm>] [MINRES=<mOhm>] [MINDELAY=<ps>])
 	mkdir -p $(NET_PEX_DIR)
+	$(MAKE) symbol-pex CELL=$(CELL)
 	sak-pex.sh -d -m $(EXT_MODE) -n $(CELL)_pex -t $(THRESHOLD) -r $(MINRES) -y $(MINDELAY) -w $(NET_PEX_DIR) $(LAY_DIR)/$(CELL).gds
-	mv $(NET_PEX_DIR)/$(CELL).pex.spice $(NET_PEX_DIR)/$(CELL)_magic_pex.spice
+	mv $(NET_PEX_DIR)/$(CELL).pex.spice $(NET_PEX_DIR)/$(CELL)_magic_pex_$(EXT_MODE).spice
 	rm -f $(NET_PEX_DIR)/pex_$(CELL).tcl
 	@if [ -f $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym ]; then \
-		echo "Reordering pins in $(CELL)_magic_pex.spice to match $(CELL)_pex.sym..."; \
-		sak-pin-reorder.py $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym $(NET_PEX_DIR)/$(CELL)_magic_pex.spice --format spice; \
+		echo "Reordering pins in $(CELL)_magic_pex_$(EXT_MODE).spice to match $(CELL)_pex.sym..."; \
+		sak-pin-reorder.py $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym $(NET_PEX_DIR)/$(CELL)_magic_pex_$(EXT_MODE).spice --format spice; \
 	else \
 		echo "No symbol $(XSCHEM_SCH_DIR)/$(CELL)_pex.sym found, skipping pin reorder."; \
 	fi
+	python3 $(SCRIPTS_DIR)/check_pex_ports.py $(NET_PEX_DIR)/$(CELL)_magic_pex_$(EXT_MODE).spice
 .PHONY: magic-pex
 # ================================================================================================
 
@@ -311,87 +381,50 @@ magic-verify: ## Verify the CELL cell with Magic (usage: make magic-verify [CELL
 
 
 # EM Simulation Targets
-sim-blc-em: ## Run the BLC EM simulation with AWS Palace (usage: make sim-blc-em [FREQ=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [E_R=<e_r>] [NP=<num_processors>])
-	BLC_GDS_FILENAME=sparx_blc_$(FREQ)GHz_$(Z0)Ohm_$(SIGNAL_CROSS_SECTION)_$(GROUND_CROSS_SECTION)_e_r_$(subst .,_,$(E_R)); \
+# All EM structures (BLC, WPD, BPF and six-port core, each with the Palace port
+# markers on layers 201..207) are written to verification/em/layout by build-layout,
+# so the simulation targets below only mesh and solve the existing GDS. This keeps
+# the EM runs consistent with the structures instantiated in the top-level layout.
+# The GDS file names encode only the design frequency, so the port settings of the
+# EM solve are passed to palace_sim.py explicitly.
+# $(1) = base name of the GDS in verification/em/layout (without the .gds suffix)
+# $(2) = simulation script in verification/em/scripts (default: palace_sim.py)
+define run-em-sim
+	@test -f $(EM_LAY_DIR)/$(1).gds || { \
+		echo "ERROR: $(EM_LAY_DIR)/$(1).gds not found. Run 'make build-layout FREQ=$(FREQ)' first."; \
+		exit 1; \
+	}
 	. .venv/bin/activate && \
-		python3 $(EM_RPT_DIR)/scripts/sparx_blc_em_sim.py \
-			--frequency $(FREQ)e9 \
-			--signal_cross_section $(SIGNAL_CROSS_SECTION) \
-			--ground_cross_section $(GROUND_CROSS_SECTION) \
-			--Z0 $(Z0) \
-			--e_r $(E_R) && \
-		python3 $(EM_RPT_DIR)/scripts/palace_sim.py ../layout/$$BLC_GDS_FILENAME.gds && \
-		cd $(EM_RPT_DIR)/palace_model/$${BLC_GDS_FILENAME}_data && \
-		palace -np $(NP) config.json && \
-		python3 $(PALACE_SCRIPTS_DIR)/combine_extend_snp.py
-.PHONY: sim-blc-em
-
-sim-wpd-em: ## Run the WPD EM simulation with AWS Palace (usage: make sim-wpd-em [FREQ=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [E_R=<e_r>] [CONFIG=<C|U>] [NP=<num_processors>])
-	WPD_GDS_FILENAME=sparx_wpd_$(FREQ)GHz_$(Z0)Ohm_$(SIGNAL_CROSS_SECTION)_$(GROUND_CROSS_SECTION)_e_r_$(subst .,_,$(E_R))_config_$(CONFIG); \
-	. .venv/bin/activate && \
-		python3 $(EM_RPT_DIR)/scripts/sparx_wpd_em_sim.py \
-			--frequency $(FREQ)e9 \
-			--signal_cross_section $(SIGNAL_CROSS_SECTION) \
-			--ground_cross_section $(GROUND_CROSS_SECTION) \
-			--Z0 $(Z0) \
-			--e_r $(E_R) \
-			--config $(CONFIG) && \
-		python3 $(EM_RPT_DIR)/scripts/palace_sim.py ../layout/$$WPD_GDS_FILENAME.gds && \
-		cd $(EM_RPT_DIR)/palace_model/$${WPD_GDS_FILENAME}_data && \
-		palace -np $(NP) config.json && \
-		python3 $(PALACE_SCRIPTS_DIR)/combine_extend_snp.py
-.PHONY: sim-wpd-em
-
-sim-bpf-em: ## Run the BPF EM simulation with AWS Palace (usage: make sim-bpf-em [FREQ=<GHz>] [BANDWIDTH=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [E_R=<e_r>] [FILTER_TYPE=<butter|cheby|ellip>] [FILTER_ORDER=<N>] [RIPPLE_DB=<dB>] [NP=<num_processors>])
-	BPF_FILTER_TYPE_LOWER=$$(echo "$(FILTER_TYPE)" | tr '[:upper:]' '[:lower:]'); \
-	if [ "$$BPF_FILTER_TYPE_LOWER" = "butter" ]; then \
-		RIPPLE_TAG=""; \
-	else \
-		RIPPLE_DB_TAG=$$(printf '%s' "$(RIPPLE_DB)" | sed 's/\.0$$//'); \
-		RIPPLE_TAG="_rip_$$(printf '%s' "$$RIPPLE_DB_TAG" | tr '.' '_')dB"; \
-	fi; \
-	BPF_GDS_FILENAME=sparx_bpf_f_$(FREQ)GHz_bw_$(BANDWIDTH)GHz_sig_$(SIGNAL_CROSS_SECTION)_gnd_$(GROUND_CROSS_SECTION)_z0_$(Z0)Ohm_er_$(subst .,_,$(E_R))_$(FILTER_TYPE)_ord_$(FILTER_ORDER)$$RIPPLE_TAG; \
-	. .venv/bin/activate && \
-		python3 $(EM_RPT_DIR)/scripts/sparx_bpf_em_sim.py \
-			--frequency $(FREQ)e9 \
-			--bandwidth $(BANDWIDTH)e9 \
-			--signal_cross_section $(SIGNAL_CROSS_SECTION) \
-			--ground_cross_section $(GROUND_CROSS_SECTION) \
-			--Z0 $(Z0) \
-			--e_r $(E_R) \
-			--filter_type $(FILTER_TYPE) \
-			--filter_order $(FILTER_ORDER) \
-			--ripple_dB $(RIPPLE_DB) && \
-		python3 $(EM_RPT_DIR)/scripts/palace_sim.py ../layout/$$BPF_GDS_FILENAME.gds && \
-		cd $(EM_RPT_DIR)/palace_model/$${BPF_GDS_FILENAME}_data && \
-		palace -np $(NP) config.json && \
-		python3 $(PALACE_SCRIPTS_DIR)/combine_extend_snp.py
-.PHONY: sim-bpf-em
-
-sim-sparx-core-em: ## Run the six-port core EM simulation with AWS Palace (usage: make sim-sparx-core-em [FREQ=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [E_R=<e_r>] [NP=<num_processors>])
-# 	The core GDS filename does not encode the EM parameters, so they are passed to palace_sim.py explicitly.
-	CORE_GDS_FILENAME=sparx$(FREQ)_core; \
-	. .venv/bin/activate && \
-		python3 $(EM_RPT_DIR)/scripts/sparx_core_em_sim.py \
-			--frequency $(FREQ)e9 \
-			--signal_cross_section $(SIGNAL_CROSS_SECTION) \
-			--ground_cross_section $(GROUND_CROSS_SECTION) \
-			--Z0 $(Z0) \
-			--e_r $(E_R) && \
-		python3 $(EM_RPT_DIR)/scripts/palace_sim.py ../layout/$$CORE_GDS_FILENAME.gds \
+		python3 $(EM_RPT_DIR)/scripts/$(if $(2),$(2),palace_sim.py) $(abspath $(EM_LAY_DIR)/$(1).gds) \
 			--f_center $(FREQ)e9 \
 			--signal_cross_section $(SIGNAL_CROSS_SECTION) \
 			--ground_cross_section $(GROUND_CROSS_SECTION) \
 			--Z0 $(Z0) && \
-		cd $(EM_RPT_DIR)/palace_model/$${CORE_GDS_FILENAME}_data && \
+		cd $(EM_RPT_DIR)/palace_model/$(1)_data && \
 		palace -np $(NP) config.json && \
 		python3 $(PALACE_SCRIPTS_DIR)/combine_extend_snp.py
+endef
+
+sim-blc-em: ## Run the BLC EM simulation with AWS Palace (usage: make sim-blc-em [FREQ=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [NP=<num_processors>])
+	$(call run-em-sim,$(BLC_EM_NAME))
+.PHONY: sim-blc-em
+
+sim-wpd-em: ## Run the WPD EM simulation with AWS Palace (usage: make sim-wpd-em [FREQ=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [NP=<num_processors>])
+	$(call run-em-sim,$(WPD_EM_NAME))
+.PHONY: sim-wpd-em
+
+sim-bpf-em: ## Run the BPF EM simulation with AWS Palace (usage: make sim-bpf-em [FREQ=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [NP=<num_processors>])
+	$(call run-em-sim,$(BPF_EM_NAME))
+.PHONY: sim-bpf-em
+
+sim-sparx-core-em: ## Run the six-port core EM simulation with AWS Palace (usage: make sim-sparx-core-em [FREQ=<GHz>] [SIGNAL_CROSS_SECTION=<metal>] [GROUND_CROSS_SECTION=<metal>] [Z0=<Ohms>] [NP=<num_processors>])
+	$(call run-em-sim,$(CORE_EM_NAME),six_port_core_palace_sim.py)
 .PHONY: sim-sparx-core-em
 # ================================================================================================
 
 
 # View EM Simulation Results Target
-FILE_NAME ?= sparx_blc_$(FREQ)GHz_$(Z0)Ohm_$(SIGNAL_CROSS_SECTION)_$(GROUND_CROSS_SECTION)_e_r_$(subst .,_,$(E_R)).s4p
+FILE_NAME ?= $(BLC_EM_NAME).s4p
 view-em-sim: ## View EM simulation results with s-parameter plots (usage: make view-em-sim FILE_NAME=<name_with_extension>)
 	cd $(EM_RPT_DIR)/palace_model && python3 ../scripts/plot_snp.py $$(find . -type f -name "$(FILE_NAME)")
 .PHONY: view-em-sim
@@ -408,42 +441,69 @@ copy-sparam: ## Copy the raw and de-embedded Touchstone files of an EM run to ve
 
 
 # Netlist Conversion Target
-snp2le: ## Convert an S-parameter Touchstone file to a lumped element netlist via a universal fit (usage: make snp2le SNP=<file.sNp> [ORDER=<N>] [LE_FORMAT=<spice|spectre>] [LE_OUT=<path>])
-	@if [ -z "$(SNP)" ]; then echo "ERROR: set the input Touchstone file, e.g. make snp2le SNP=verification/em/s-parameter/sparx_blc_160GHz_50Ohm_TM2_M5_e_r_4_1_deembedded.s4p"; exit 1; fi
+snp2le: ## Convert an S-parameter Touchstone file to a lumped element netlist via a universal fit (usage: make snp2le SNP=<file.sNp> [ORDER=<N>] [LE_FORMAT=<spice|spectre>] [LE_OUT=<path>] [LE_NOISE=<noiseless|thermal>])
+	@if [ -z "$(SNP)" ]; then echo "ERROR: set the input Touchstone file, e.g. make snp2le SNP=verification/em/s-parameter/sparx160_blc.s4p"; exit 1; fi
 	case "$(LE_FORMAT)" in \
 		spice)   SNP2LE_FORMAT=ngspice; DEFAULT_OUT=$(NET_SPICE_DIR)/$$(basename $(SNP) | sed -E 's/\.s[0-9]+p$$//I')_le.spice ;; \
 		spectre) SNP2LE_FORMAT=vacask;  DEFAULT_OUT=$(NET_SPECTRE_DIR)/$$(basename $(SNP) | sed -E 's/\.s[0-9]+p$$//I')_le.inc ;; \
 		*) echo "Invalid LE_FORMAT: $(LE_FORMAT). Use spice or spectre."; exit 1 ;; \
 	esac; \
+	case "$(LE_NOISE)" in \
+		noiseless) NOISE_FLAG= ;; \
+		thermal)   NOISE_FLAG=--thermal-noise ;; \
+		*) echo "Invalid LE_NOISE: $(LE_NOISE). Use noiseless or thermal."; exit 1 ;; \
+	esac; \
 	OUT="$(LE_OUT)"; \
 	if [ -z "$$OUT" ]; then OUT="$$DEFAULT_OUT"; fi; \
 	mkdir -p "$$(dirname "$$OUT")"; \
-	snp2le -b convert $(SNP) --mode universal --order $(ORDER) --format $$SNP2LE_FORMAT -o "$$OUT"
+	snp2le -b convert $(SNP) --mode universal --order $(ORDER) --format $$SNP2LE_FORMAT $$NOISE_FLAG -o "$$OUT"
 .PHONY: snp2le
 # ================================================================================================
 
 
 # Xschem Simulation Targets
-TB ?= $(error TB is not set. Usage: make sim-xschem TB=<testbenchname>)
-SCRIPT ?= $(error SCRIPT is not set. Usage: make sim-view-xschem SCRIPT=<scriptname>)
+# Testbench for sim-xschem (default: the bandpass filter AC S-parameter bench, the same block the snp2le default converts)
+# Override with: make <target> TB=<testbenchname>
+TB ?= sparx_bpf_le_tb_acsp_ngspice
+# Plotting script for sim-view-xschem (default: the script that serves every acsp ngspice bench)
+# Override with: make <target> SCRIPT=<scriptname>
+SCRIPT ?= plot_n_port_tb_acsp_ngspice
 
-sim-xschem: ## Run a testbench simulation with Xschem in batch mode (usage: make sim-xschem TB=<testbenchname>)
+sim-xschem: ## Run a testbench simulation with Xschem in batch mode (usage: make sim-xschem [TB=<testbenchname>])
 	mkdir -p $(XSCHEM_TB_DIR)/simulations
-	cd $(XSCHEM_TB_DIR) && xschem -x -q --rcfile xschemrc --command ' \
+	mkdir -p $(SIM_PLOT_DIR)/data
+	cd $(XSCHEM_TB_DIR) && xschem -r -x -q --rcfile xschemrc --command ' \
 		xschem set netlist_type $(if $(findstring _vacask,$(TB)),spectre,spice); \
 		set netlist_dir $(abspath $(XSCHEM_TB_DIR)/simulations); \
 		xschem save; \
-		$(if $(findstring _vacask,$(TB)),write_data [save_params] $(abspath $(XSCHEM_TB_DIR)/simulations)/$(TB).save;) \
+		write_data [save_params] $(abspath $(XSCHEM_TB_DIR)/simulations)/$(TB).save; \
 		xschem netlist \
 	' $(TB).sch
-	cd $(XSCHEM_TB_DIR)/simulations && $(if $(findstring _vacask,$(TB)),vacask -qp -sp $(TB).spectre </dev/null,ngspice -b $(TB).spice)
+# 	With VARIANT set, the emitted netlist is rewritten into the design variant and run in its own directory.
+	$(if $(VARIANT),python3 $(SCRIPTS_DIR)/powdet_variant.py --variant $(VARIANT) $(XSCHEM_TB_DIR)/simulations/$(TB).spectre $(XSCHEM_TB_DIR)/simulations/$(VARIANT)/$(TB).spectre && cp $(XSCHEM_TB_DIR)/simulations/$(TB).save $(XSCHEM_TB_DIR)/simulations/$(VARIANT)/)
+	cd $(XSCHEM_TB_DIR)/simulations/$(VARIANT) && $(if $(findstring _vacask,$(TB)),vacask -qp -sp $(TB).spectre </dev/null,ngspice -b $(TB).spice)
 # 	VACASK runs with -sp, so its postprocess scripts are run here instead.
+#	POWDET_VARIANT tells the power-detector scripts which directory to read and which suffix to write.
 	$(if $(findstring _acsp_vacask,$(TB)),python3 $(SIM_PLOT_DIR)/plot_n_port_tb_acsp_vacask.py)
 	$(if $(findstring _hb_vacask,$(TB)),python3 $(SIM_PLOT_DIR)/plot_sparx_powdet_sbd_tb_hb_dBV-dBV_vacask.py)
 	$(if $(findstring _hb_vacask,$(TB)),python3 $(SIM_PLOT_DIR)/plot_sparx_powdet_sbd_tb_hb_V-W_vacask.py)
+	$(if $(findstring _pss_vacask,$(TB)),POWDET_VARIANT=$(VARIANT) python3 $(SIM_PLOT_DIR)/plot_sparx_powdet_sbd_tb_pss_vacask.py)
+	$(if $(findstring powdet_sbd_tb_nf_vacask,$(TB)),POWDET_VARIANT=$(VARIANT) python3 $(SIM_PLOT_DIR)/plot_sparx_powdet_sbd_tb_nf_vacask.py)
+	$(if $(findstring powdet_sbd_tb_tn_vacask,$(TB)),POWDET_VARIANT=$(VARIANT) python3 $(SIM_PLOT_DIR)/plot_sparx_powdet_sbd_tb_tn_vacask.py)
+	$(if $(findstring _tn_lo_vacask,$(TB)),POWDET_VARIANT=$(VARIANT) python3 $(SIM_PLOT_DIR)/plot_sparx_powdet_sbd_tb_tn_lo_vacask.py)
+	$(if $(findstring _rx_vacask,$(TB)),POWDET_VARIANT=$(VARIANT) python3 $(SIM_PLOT_DIR)/plot_sparx_top_le_tb_rx_vacask.py)
+	$(if $(findstring top_le_tb_nf_vacask,$(TB)),POWDET_VARIANT=$(VARIANT) python3 $(SIM_PLOT_DIR)/plot_sparx_top_le_tb_nf_vacask.py)
+	$(if $(findstring top_le_tb_tn_vacask,$(TB)),POWDET_VARIANT=$(VARIANT) python3 $(SIM_PLOT_DIR)/plot_sparx_top_le_tb_tn_vacask.py)
 .PHONY: sim-xschem
 
-sim-view-xschem: ## Plot Xschem simulation results (usage: make sim-view-xschem SCRIPT=<scriptname>)
+sim-powdet-variants: ## Run the power-detector PSS and NF testbenches for the m16 and m1_pex design variants (usage: make sim-powdet-variants)
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_pss_vacask VARIANT=m16
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_nf_vacask VARIANT=m16
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_pss_vacask VARIANT=m1_pex
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_nf_vacask VARIANT=m1_pex
+.PHONY: sim-powdet-variants
+
+sim-view-xschem: ## Plot Xschem simulation results (usage: make sim-view-xschem [SCRIPT=<scriptname>])
 	SHOW_PLOTS=1 python3 $(SIM_PLOT_DIR)/$(SCRIPT).py
 .PHONY: sim-view-xschem
 
@@ -460,16 +520,32 @@ sim-all: ## Run all Xschem testbench simulations (usage: make sim-all)
 	$(MAKE) sim-xschem TB=sparx_core_tb_acsp_vacask
 	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_ngspice
 	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_hb_vacask
+# 	PSS before NF: the PSS testbench fits the responsivity that the NF testbench turns into an NEP.
+#	The design variants (16 diode cells, and the fabricated design with its layout parasitics) follow the fabricated design.
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_pss_vacask
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_nf_vacask
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_tn_vacask
+	$(MAKE) sim-xschem TB=sparx_powdet_sbd_tb_tn_lo_vacask
+	$(MAKE) sim-powdet-variants
+# 	Receiver level: the full-core fit driving the four detectors, as fabricated and post-layout, in VACASK (HB, HBAC, two-tone HB and transient in one bench), and the two ngspice transients of the composed and the full-core model.
+	$(MAKE) sim-xschem TB=sparx_top_le_tb_rx_vacask
+	$(MAKE) sim-xschem TB=sparx_top_le_tb_rx_vacask VARIANT=m1_pex
+	$(MAKE) sim-xschem TB=sparx_top_le_tb_tran_ngspice
+	$(MAKE) sim-xschem TB=sparx_top_tb_tran_ngspice
+# 	Receiver noise figure from noise, hbnoise and pnoise, as fabricated and post-layout, after the detector NF and receiver benches it is compared against. The transient-noise ladder follows the NF bench whose rawfiles it is checked against.
+	$(MAKE) sim-xschem TB=sparx_top_le_tb_nf_vacask
+	$(MAKE) sim-xschem TB=sparx_top_le_tb_nf_vacask VARIANT=m1_pex
+	$(MAKE) sim-xschem TB=sparx_top_le_tb_tn_vacask
 .PHONY: sim-all
 # ================================================================================================
 
 
 # Six-Port Core EM Flow Target
-sparx-core: ## Run the six-port core EM flow: EM simulation, S-parameter copy, LE fit with ORDER=24, and core testbench simulation (usage: make sparx-core [FREQ=<GHz>])
+sparx-core: ## Run the six-port core EM flow: EM simulation, S-parameter copy, LE fit with ORDER=24 and thermal noise, and core testbench simulation (usage: make sparx-core [FREQ=<GHz>])
 	$(MAKE) sim-sparx-core-em
 	$(MAKE) copy-sparam SPARAM=sparx$(FREQ)_core
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/sparx$(FREQ)_core_deembedded.s7p ORDER=24 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_core_le.spice
-	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/sparx$(FREQ)_core_deembedded.s7p ORDER=24 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_core_le.inc
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/sparx$(FREQ)_core.s7p ORDER=24 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_core_le.spice LE_NOISE=thermal
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/sparx$(FREQ)_core.s7p ORDER=24 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_core_le.inc LE_NOISE=thermal
 	$(MAKE) sim-xschem TB=sparx_core_tb_acsp_ngspice
 	$(MAKE) sim-xschem TB=sparx_core_tb_acsp_vacask
 .PHONY: sparx-core
@@ -490,16 +566,16 @@ all: ## Build, verify, EM-simulate, extract LE models, and run all testbenches (
 	$(MAKE) sim-wpd-em
 	$(MAKE) sim-blc-em
 # 	Copy the raw and de-embedded S-parameter results (BPF, WPD, BLC) to verification/em/s-parameter
-	$(MAKE) copy-sparam SPARAM=sparx_bpf_f_160GHz_bw_1GHz_sig_TM2_gnd_M5_z0_50Ohm_er_4_1_butter_ord_3
-	$(MAKE) copy-sparam SPARAM=sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U
-	$(MAKE) copy-sparam SPARAM=sparx_blc_160GHz_50Ohm_TM2_M5_e_r_4_1
-# 	De-embedded S-parameter to lumped element netlist conversion (SPICE and Spectre) for BPF, WPD, BLC
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_bpf_f_160GHz_bw_1GHz_sig_TM2_gnd_M5_z0_50Ohm_er_4_1_butter_ord_3_deembedded.s2p ORDER=13 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_bpf_le.spice
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_bpf_f_160GHz_bw_1GHz_sig_TM2_gnd_M5_z0_50Ohm_er_4_1_butter_ord_3_deembedded.s2p ORDER=13 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_bpf_le.inc
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U_deembedded.s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U_deembedded.s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_blc_160GHz_50Ohm_TM2_M5_e_r_4_1_deembedded.s4p ORDER=6 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_blc_le.spice
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_blc_160GHz_50Ohm_TM2_M5_e_r_4_1_deembedded.s4p ORDER=6 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_blc_le.inc
+	$(MAKE) copy-sparam SPARAM=$(BPF_EM_NAME)
+	$(MAKE) copy-sparam SPARAM=$(WPD_EM_NAME)
+	$(MAKE) copy-sparam SPARAM=$(BLC_EM_NAME)
+# 	Raw S-parameter to lumped element netlist conversion (SPICE and Spectre) for BPF, WPD, BLC
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BPF_EM_NAME).s2p ORDER=13 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_bpf_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BPF_EM_NAME).s2p ORDER=13 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_bpf_le.inc
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME).s4p ORDER=6 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_blc_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME).s4p ORDER=6 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_blc_le.inc
 # 	Xschem testbench simulations
 	$(MAKE) sim-all
 .PHONY: all
@@ -516,6 +592,7 @@ release: ## Copy the gds, netlist files and chip renders to the release folder (
 	cp -r $(NET_LAY_DIR)/. $(RELEASE_DIR)/v.$(VERSION)/netlist/layout
 	cp -f $(RENDER_IMG_DIR)/$(TOP)_black.png $(RELEASE_DIR)/v.$(VERSION)/img/$(TOP)_black.png
 	cp -f $(RENDER_IMG_DIR)/$(TOP)_white.png $(RELEASE_DIR)/v.$(VERSION)/img/$(TOP)_white.png
+	cp -f $(RENDER_IMG_DIR)/$(TOP)_black_TM2.png $(RELEASE_DIR)/v.$(VERSION)/img/$(TOP)_black_TM2.png
 .PHONY: release
 # ================================================================================================
 
@@ -538,10 +615,10 @@ regression: ## Regression test target for IIC-OSIC-TOOLS (usage: make regression
 	$(if $(filter 1,$(NIGHTLY_REGRESSION)),$(MAKE) sim-wpd-em)
 # 	Copy the raw and de-embedded S-parameter results (WPD): the fresh sim-wpd-em output when
 # 	NIGHTLY_REGRESSION=1, otherwise the committed Palace output.
-	$(MAKE) copy-sparam SPARAM=sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U
-# 	De-embedded S-parameter to lumped-element netlist conversion (WPD).
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U_deembedded.s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
-	$(MAKE) snp2le SNP=verification/em/s-parameter/sparx_wpd_160GHz_50Ohm_TM2_M5_e_r_4_1_config_U_deembedded.s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
+	$(MAKE) copy-sparam SPARAM=$(WPD_EM_NAME)
+# 	Raw S-parameter to lumped-element netlist conversion (WPD).
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_wpd_le.spice
+	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
 # 	Xschem netlisting + one ngspice and one VACASK AC S-parameter simulation.
 	$(MAKE) sim-xschem TB=sparx_wpd_le_tb_acsp_ngspice
 	$(MAKE) sim-xschem TB=sparx_wpd_le_tb_acsp_vacask
@@ -550,4 +627,20 @@ regression: ## Regression test target for IIC-OSIC-TOOLS (usage: make regression
 regression-nightly: ## Nightly regression test target for IIC-OSIC-TOOLS (usage: make regression-nightly)
 	$(MAKE) regression NIGHTLY_REGRESSION=1
 .PHONY: regression-nightly
+# ================================================================================================
+
+
+# Clean Target
+clean: ## Delete all generated files and folders (layouts, EM structures and results, netlists, render, DRC/LVS reports, simulation outputs)
+	rm -rf build
+	rm -rf $(LAY_DIR)
+	rm -rf $(EM_LAY_DIR) $(EM_RPT_DIR)/palace_model $(EM_SPARAM_DIR)
+	rm -rf $(NET_SCH_DIR) $(NET_LAY_DIR) $(NET_PEX_DIR) $(NET_SPICE_DIR) $(NET_SPECTRE_DIR)
+	rm -rf $(RENDER_IMG_DIR)
+	rm -rf $(DRC_RPT_DIR) $(LVS_RPT_DIR)
+	rm -rf $(XSCHEM_SCH_DIR)/simulations $(XSCHEM_TB_DIR)/simulations
+	rm -rf $(SIM_PLOT_DIR)/data $(SIM_PLOT_DIR)/figures $(SIM_PLOT_DIR)/__pycache__
+	rm -rf $(SCRIPTS_DIR)/__pycache__ $(EM_RPT_DIR)/scripts/__pycache__
+	rm -f *.nodes *.sim
+.PHONY: clean
 # ================================================================================================

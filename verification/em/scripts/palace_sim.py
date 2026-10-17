@@ -5,8 +5,94 @@ import re
 import sys
 import subprocess
 from gds2palace import *
+import gds2palace
 import gdspy
 import argparse
+
+
+def _parse_args():
+    """Parse the command line.
+
+    The EM parameters are normally derived from the GDS file name, which is
+    written by scripts/six_port_gen.py. Structures whose file name does not
+    encode them (e.g. the six-port core) pass them explicitly instead.
+    """
+    parser = argparse.ArgumentParser(description="Build and run a Palace model from a GDSII file")
+    parser.add_argument("gds_filename", help="GDSII file with the geometry and the port markers")
+    parser.add_argument("--f_center", type=float, default=None, help="Center frequency in Hz (default: from the file name)")
+    parser.add_argument("--signal_cross_section", type=str, default=None, help="Signal layer name, e.g. TM2 (default: from the file name)")
+    parser.add_argument("--ground_cross_section", type=str, default=None, help="Ground layer name, e.g. M5 (default: from the file name)")
+    parser.add_argument("--Z0", type=float, default=None, help="Reference impedance of the ports in Ohms (default: from the file name)")
+    parser.add_argument("--stackup", type=str, default="SG13G2_nosub.xml",
+                        help="Stackup XML, either a bare name resolved against the PDK's "
+                             "libs.tech/palace/XML_stackup/legacy (workflow in older PDKs), "
+                             "or a path (default: SG13G2_nosub.xml)")
+    return parser.parse_args()
+
+
+def _resolve_stackup(stackup):
+    """Resolve the stackup XML, preferring an explicit path over the PDK's copy.
+
+    The stackup files are not vendored in this repository. They ship with the PDK,
+    in its libs.tech/palace submodule. The gds2palace package that reads them is a
+    separate pip install in the container, see verification/em/stackups/README.md.
+    """
+    if os.path.sep in stackup or (os.path.altsep and os.path.altsep in stackup):
+        path = os.path.abspath(stackup)
+        if not os.path.isfile(path):
+            raise SystemExit(f"ERROR: stackup not found: {path}")
+        return path
+
+    pdk_root = os.environ.get("PDK_ROOT")
+    if not pdk_root:
+        raise SystemExit(
+            "ERROR: PDK_ROOT is not set, so the stackup cannot be resolved. Run inside "
+            "IIC-OSIC-TOOLS, or pass a path with --stackup."
+        )
+    pdk = os.environ.get("PDK", "ihp-sg13g2")
+    palace_dir = os.path.join(pdk_root, pdk, "libs.tech", "palace")
+    # gds2palace moved its stackups unchanged from workflow/ to XML_stackup/legacy/ on
+    # 2026-09-26, so which folder holds them depends on the gds2palace the PDK pins.
+    candidates = [os.path.join(palace_dir, "XML_stackup", "legacy", stackup),
+                  os.path.join(palace_dir, "workflow", stackup)]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    raise SystemExit(
+        "ERROR: stackup not found in" + os.linesep
+        + os.linesep.join("       " + path for path in candidates) + os.linesep
+        + "       Check PDK_ROOT/PDK, or pass a path with --stackup."
+    )
+
+
+def _pdk_commit():
+    """Read the PDK git hash the container was built from.
+
+    IIC-OSIC-TOOLS writes it to $PDK_ROOT/$PDK/COMMIT at install time. Since the
+    stackup is not vendored in this repository, this hash is what identifies the
+    exact stackup a result was solved against: it pins the PDK commit, which pins
+    the libs.tech/palace submodule, which is the stackup file itself.
+    """
+    pdk_root = os.environ.get("PDK_ROOT")
+    if not pdk_root:
+        return "unknown (PDK_ROOT not set)"
+    path = os.path.join(pdk_root, os.environ.get("PDK", "ihp-sg13g2"), "COMMIT")
+    try:
+        with open(path) as commit_file:
+            return commit_file.read().strip() or "unknown (empty COMMIT file)"
+    except OSError:
+        return f"unknown (no {path})"
+
+
+def _gds2palace_version():
+    """Name the gds2palace that builds the model.
+
+    The container installs it with pip, separately from the PDK, so the PDK commit
+    does not identify it, and its version can differ from the PDK's own copy.
+    """
+    return (f"{getattr(gds2palace, '__version__', 'unknown')} "
+            f"(reader {getattr(stackup_reader, '__version__', 'unknown')}), "
+            f"{os.path.dirname(gds2palace.__file__)}")
 
 
 def _get_number_of_ports(gds_filename):
@@ -91,13 +177,24 @@ def _get_layers(cell, layers=None):
 
 # ===================== input files and path settings =======================
 
-gds_filename = sys.argv[1]   # geometries
-# stackup (lives in ../stackups/, resolved absolutely so it does not depend on the cwd)
-XML_filename = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "stackups", "SG13G2_nosub.xml"
-)
+args = _parse_args()
 
-# preprocess GDSII for safe handling of cutouts/holes?
+gds_filename = args.gds_filename   # geometries
+# Stackup, taken from the PDK rather than vendored here. SG13G2_nosub is the default
+# because the solid Metal5 plane under the TopMetal2 traces shields the silicon, so
+# leaving the substrate out of the model costs almost nothing in accuracy and saves a
+# lot of mesh. The resolved path, the PDK commit and the gds2palace that reads the file
+# are printed below, because they are the model inputs this repository does not pin.
+# See verification/em/stackups/README.md for the other stackups and for the
+# schemaVersion 3.x caveat.
+XML_filename = _resolve_stackup(args.stackup)
+print("Stackup:    ", XML_filename)
+print("PDK commit: ", _pdk_commit())
+print("gds2palace: ", _gds2palace_version())
+
+# preprocess GDSII for safe handling of cutouts/holes. No longer required since gds2palace
+# redesigned cutout handling in August 2026, kept here so the flow also works with older
+# gds2palace versions, where the argument still exists.
 preprocess_gds = False
 
 # merge via polygons with distance less than .. microns, set to 0 to disable via merging.
@@ -113,7 +210,7 @@ model_basename = str.split(gds_filename.split('/')[-1], ".")[0]
 sim_path = utilities.create_sim_path(script_path, model_basename, dirname="../palace_model/")
 print('Simulation data directory: ', sim_path)
 
-f_center = _get_ghz_from_filename(gds_filename) * 1e9
+f_center = args.f_center if args.f_center is not None else _get_ghz_from_filename(gds_filename) * 1e9
 
 
 # change path to models script path
@@ -158,14 +255,19 @@ layer_dict = {
     "M2": "Metal2",
     "M1": "Metal1",
 }
-signal_layer, ground_layer = _get_layer_names_from_filename(gds_filename)
+if args.signal_cross_section and args.ground_cross_section:
+    signal_layer, ground_layer = args.signal_cross_section, args.ground_cross_section
+else:
+    signal_layer, ground_layer = _get_layer_names_from_filename(gds_filename)
+
+port_Z0 = args.Z0 if args.Z0 is not None else _get_impedance_from_filename(gds_filename)
 
 for portnumber in range(1, num_ports + 1):
     simulation_ports.add_port(
         simulation_setup.simulation_port(
             portnumber=portnumber,
             voltage=1,
-            port_Z0=_get_impedance_from_filename(gds_filename),
+            port_Z0=port_Z0,
             source_layernum=200 + portnumber,
             from_layername=layer_dict.get(signal_layer),
             to_layername=layer_dict.get(ground_layer),
