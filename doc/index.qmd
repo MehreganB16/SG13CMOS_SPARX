@@ -31,7 +31,7 @@ format:
 ---
 
 ::: {.callout-important}
-This repository requires the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) container with tag `2026.10` or later. All commands below run inside the container, from the repository root. A few targets need a newer VACASK and snp2le than the current container images ship, see @sec-requirements.
+This repository requires the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) container with tag `2026.10` or later. All commands below run inside the container, from the repository root. `2026.10` is the first image with the VACASK and snp2le that the noise benches and the thermal-noise fit need, see @sec-requirements.
 :::
 
 ::: {.callout-note}
@@ -141,13 +141,13 @@ Everything runs inside the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-
 
 : Tools and versions. {#tbl-requirements tbl-colwidths="[25,40,35]"}
 
-The container images up to `2026.09` ship older VACASK builds: `2026.09` has `hbnoise` but neither `pac` nor `pnoise`, and `2026.08` has none of the three. On such a binary the shooting analyses of the PSS bench abort, the NF benches report `pac` and `pnoise` as unknown analyses and run the rest, and VACASK still exits 0. Check the binary before running the noise benches:
+The `2026.10` image ships VACASK `fb8cc20` and snp2le 0.1.17. The images up to `2026.09` ship older VACASK builds: `2026.09` has `hbnoise` but neither `pac` nor `pnoise`, and `2026.08` has none of the three. On such a binary the shooting analyses of the PSS bench abort, the NF benches report `pac` and `pnoise` as unknown analyses and run the rest, and VACASK still exits 0. To check a binary:
 
 ```sh
 strings $(which vacask) | grep -c "PNOISE periodic"    # 0 on a build without pnoise
 ```
 
-The [testbench README](https://github.com/iic-jku/SG13CMOS_SPARX/blob/main/testbenches/xschem/README.md#running-a-testbench) describes how the `1b48553` build was made inside the container. The Code-a-Chip notebook carries a prebuilt binary of the same commit, see @sec-cac.
+The committed results were produced with a `1b48553` build, made inside the `2026.09` container as the [testbench README](https://github.com/iic-jku/SG13CMOS_SPARX/blob/main/testbenches/xschem/README.md#running-a-testbench) describes. The Code-a-Chip notebook carries a prebuilt binary of the same commit, see @sec-cac.
 
 The `Makefile` checks `$PDK` when it is parsed. Every target except `help` and `clean` aborts if it is not `ihp-sg13g2`, because a wrong PDK mixes technologies silently: DRC and LVS would run against the wrong rule deck, and an extraction under `ihp-sg13cmos5l` exits cleanly with Metal5, TopMetal2, the MIM capacitors and both diodes missing from the netlist.
 
@@ -776,7 +776,6 @@ The measurement plan probes the LO and RF pads with a wafer prober and bonds the
 - **Fit extrapolation.** The fits see the EM band from 80 GHz to 240 GHz only, and they are passive inside it. Above it the WPD fit reaches a largest singular value of 1.618 at 679 GHz. The receiver benches also evaluate the core at the IF and at the LO harmonics, where the passive fit extrapolates. The detector noise figure plus the RF path loss, a composition in which the detector sees 50 $\Omega$ at every frequency, agrees with the simulated receiver within 0.3 dB, which bounds the effect at the operating point.
 - **Detector noise model.** 97 % of the detector noise comes from the flicker model of a parasitic PNP evaluated far below any characterized current, and its value depends on the BJT area scaling of the simulator build. Measurements will show how far it applies.
 - **Detector guard rings.** The substrate guard rings of the two Schottky diodes are not tied to ground by metal. The `vss` network of the full-RC extraction therefore comes out differently in every run (`extresist` reports an orphaned node), and the VACASK benches idealize that net.
-- **Toolchain versions.** The PSS and NF benches need VACASK `1b48553` or later, and the thermal-noise fit needs snp2le 0.1.10 or later, see @sec-requirements.
 
 The repository keeps [`KNOWN_ISSUES.md`](https://github.com/iic-jku/SG13CMOS_SPARX/blob/main/KNOWN_ISSUES.md) and [`ToDo.md`](https://github.com/iic-jku/SG13CMOS_SPARX/blob/main/ToDo.md) up to date.
 
