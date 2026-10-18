@@ -187,7 +187,7 @@ Most build outputs are committed: layouts, netlists, Palace results, Touchstone 
 | `testbenches/xschem/` | 24 ngspice and VACASK testbenches, the `plot_simulations/` scripts with their `data/` and `figures/` |
 | `netlist/` | `schematic/`, `layout/` and `pex/` netlists of the detector, `spice/` and `spectre/` LE models from snp2le |
 | `verification/drc/`, `verification/lvs/` | DRC and LVS run folders |
-| `verification/em/` | `layout/` (EM structures), `palace_model/` (Palace runs), `s-parameter/` (Touchstone files), `scripts/`, `stackups/` |
+| `verification/em/` | `layout/` (EM structures), `metal_model/` (surface versus volume metal, @sec-em-metal), `palace_model/` (Palace runs), `s-parameter/` (Touchstone files), `scripts/`, `stackups/` |
 | `render/`, `release/`, `doc/` | layout renders, published releases, this documentation |
 | `sscs-ose-code-a-chip/` | the Code-a-Chip notebook, see @sec-cac |
 | `measurements/` | lab measurement notes |
@@ -302,7 +302,7 @@ $$ {#eq-eps-eff}
 
 ![EM-simulated (solid) and IPC-2141 closed-form (dashed) characteristic impedance at 160 GHz against trace width for the six combinations. The closed form does not apply where $h_1 < t$ (TM2 over TM1, TM1 over M5). The stars mark $\sqrt{2} Z_0$, $Z_0$ and $Z_0/\sqrt{2}$ for TM2 over M5.](fig/layout/tline_z0.svg){#fig-z0 width=85%}
 
-![EM-simulated attenuation at 160 GHz against trace width for the six combinations. The SPARX design point, TM2 over M5 at $w = 7.2\ \mu$m, loses 1.26 dB/mm.](fig/layout/tline_loss.svg){#fig-loss width=85%}
+![EM-simulated attenuation at 160 GHz against trace width for the six combinations. The SPARX design point, TM2 over M5 at $w = 7.2\ \mu$m, loses 1.26 dB/mm. The losses come from the surface metal model, see @sec-em-metal.](fig/layout/tline_loss.svg){#fig-loss width=85%}
 
 @fig-z0 confirms the range $0.1 \le w/h_1 \le 2$ that IPC-2141 states for @eq-z0, for every combination with $h_1 > t$. For TM2 over M5, @eq-z0 gives 2.5 $\mu$m, 7.2 $\mu$m and 12.5 $\mu$m for the $\sqrt{2} Z_0 = 70.7\ \Omega$, $Z_0 = 50\ \Omega$ and $Z_0/\sqrt{2} = 35.4\ \Omega$ the WPD and the BLCs need [@Wilkinson_1960; @Reed_1956]. At these widths the EM simulation gives 74.1 $\Omega$, 51.1 $\Omega$ and 39.4 $\Omega$, which is 4.7 %, 2.2 % and 11.5 % above target, the last beyond $w/h_1 = 2$. Where $h_1 < t$ the closed form is off by more than 14 % at every width and is of no use.
 
@@ -523,6 +523,7 @@ make sparx-core                          # seven-port core: EM, copy, fit, bench
 | :--- | :--- |
 | Process stackup | `SG13G2_nosub.xml` from `$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/` (`workflow/` in older PDKs), not vendored |
 | Ports | TopMetal2 signal over Metal5 ground, 50 $\Omega$ (`SIGNAL_CROSS_SECTION`, `GROUND_CROSS_SECTION`, `Z0`) |
+| Metal model | gds2palace's surface model, a surface impedance on every metal face, see @sec-em-metal |
 | Frequency sweep | 80 GHz to 240 GHz in 1.6 GHz steps, 101 points, adaptive sweep tolerance 0.02 |
 | Element order | 2 |
 | Linear solver | GMRES, tolerance $10^{-6}$ |
@@ -559,7 +560,11 @@ The full core is solved as one seven-port structure including all interconnects 
 
 : Imbalances of the 160 GHz six-port core at 160 GHz, de-embedded. {#tbl-em-core}
 
-The insertion loss at 160 GHz is 16.7 dB to 18.6 dB from the LO port to the four outputs and 6.5 dB to 10.7 dB from the RF port, into 50 $\Omega$. The phase differences deviate from the ideal -90° by 5° to 12.5°. Imbalances of this size are static, and six-port calibration removes them [@Mailand_2018].
+The insertion loss at 160 GHz is 16.7 dB to 18.6 dB from the LO port to the four outputs and 6.5 dB to 10.7 dB from the RF port, into 50 $\Omega$. The phase differences deviate from the ideal -90° by 5° to 12.5°. Imbalances of this size are static, and six-port calibration removes them [@Mailand_2018]. The losses come from the surface metal model and are slightly pessimistic, see @sec-em-metal.
+
+## Metal Model {#sec-em-metal}
+
+gds2palace models a metal either as a hollow shell with a surface impedance on every face, its default and the model of all SPARX runs, or as a conducting volume whose current Palace solves inside the metal. A check of 2026-10-18 compared the surface results with a 2D volume reference of the TopMetal2-over-Metal5 line and with volume physics emulated on the blocks. The 2.5 $\mu$m WPD arms agree within 1 %, the 7.2 $\mu$m 50 $\Omega$ lines read 6 % to 14 % too lossy from 80 GHz to 240 GHz, and the BPF passband would improve by about 0.5 dB. Three errors of the surface model partly cancel: Palace's thickness correction treats the 0.49 $\mu$m Metal5 ground as carrying current on both faces and reads it too lossy, the 2 $\mu$m mesh reads 2 % to 6 % high, and the surface impedance reads narrow, thick strips low. A volume solve that resolves the 0.23 $\mu$m skin depth of TopMetal2 at 160 GHz needs several times the memory of the available hosts, and the error is conservative, so the flow stays on the surface model for now. [`verification/em/metal_model/README.md`](https://github.com/iic-jku/SG13CMOS_SPARX/blob/main/verification/em/metal_model/README.md) explains the two models, documents the check with its scripts and results, and lists when to switch to volume metal.
 
 ## Cost {#sec-em-cost}
 
@@ -772,7 +777,8 @@ The measurement plan probes the LO and RF pads with a wafer prober and bonds the
 - **Frequencies other than 160 GHz** pass the `macro`-level DRC, but the repository holds no DRC report and no EM result for them.
 - **Author label.** Every generated layout carries the label "SPARX 160", whatever its frequency, because the label is a fixed image, `scripts/assets/D_Kellerer.png`, placed as a committed GDS.
 - **BPF.** The closed-form models reach their limits on the meanders and coupled lines of the hairpin filter: the 160 GHz filter loses 10 dB and matches only to -6.2 dB, in the LO path. It is the block with the most to gain from optimization.
-- **No mesh-convergence study.** The committed Palace runs use element order 2 on a single mesh without adaptive refinement.
+- **No mesh-convergence study.** The committed Palace runs use element order 2 on a single mesh without adaptive refinement. The metal-model check of @sec-em-metal refined the TopMetal2 edges once, from 2 $\mu$m to 0.5 $\mu$m, which lowered the loss by 2 % to 6 %.
+- **Metal model.** The EM runs use gds2palace's surface metal model. Against volume physics the 50 $\Omega$ lines read 6 % to 14 % too lossy and the BPF about 0.5 dB, while the WPD agrees within 1 %, see @sec-em-metal.
 - **Fit extrapolation.** The fits see the EM band from 80 GHz to 240 GHz only, and they are passive inside it. Above it the WPD fit reaches a largest singular value of 1.618 at 679 GHz. The receiver benches also evaluate the core at the IF and at the LO harmonics, where the passive fit extrapolates. The detector noise figure plus the RF path loss, a composition in which the detector sees 50 $\Omega$ at every frequency, agrees with the simulated receiver within 0.3 dB, which bounds the effect at the operating point.
 - **Detector noise model.** 97 % of the detector noise comes from the flicker model of a parasitic PNP evaluated far below any characterized current, and its value depends on the BJT area scaling of the simulator build. Measurements will show how far it applies.
 - **Detector guard rings.** The substrate guard rings of the two Schottky diodes are not tied to ground by metal. The `vss` network of the full-RC extraction therefore comes out differently in every run (`extresist` reports an orphaned node), and the VACASK benches idealize that net.
