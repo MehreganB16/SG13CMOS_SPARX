@@ -25,7 +25,7 @@ When adding a flow or a folder, mirror the template layout and its `Makefile` co
 | `testbenches/xschem/` | ngspice and VACASK testbenches, `plot_simulations/` scripts with their `data/` and `figures/` |
 | `netlist/` | `schematic`, `layout`, `pex` (power detector), `spice` and `spectre` (LE models from snp2le) |
 | `verification/drc/`, `verification/lvs/` | DRC and LVS run folders |
-| `verification/em/` | `layout/` (EM structures from `build-layout`), `palace_model/` (Palace runs), `s-parameter/` (Touchstone files), `scripts/` (Palace drivers), `stackups/` (stackup notes) |
+| `verification/em/` | `layout/` (EM structures from `build-layout`), `metal_model/` (surface versus volume metal, the check and its scripts), `palace_model/` (Palace runs), `s-parameter/` (Touchstone files), `scripts/` (Palace drivers), `stackups/` (stackup notes) |
 | `render/`, `release/v.<version>/`, `doc/` | Renders, published releases, Quarto documentation site |
 | `sscs-ose-code-a-chip/` | ISSCC'27 Code-a-Chip notebook with its own copies of GDS and assets, not driven by the `Makefile` |
 | `measurements/` | Lab measurement notes |
@@ -68,6 +68,7 @@ make regression                                  # tool/flow smoke test, reuses 
 - EM file names encode only the frequency (`sparx<FREQ>_blc`, `_wpd`, `_bpf`, `_core`). `BLC_EM_NAME` and the other `*_EM_NAME` variables in the `Makefile` must stay in sync with the `write_em_gds()` calls in `six_port_gen.py`.
 - The EM port settings `SIGNAL_CROSS_SECTION`, `GROUND_CROSS_SECTION` and `Z0` are passed to `palace_sim.py`, not read from the layout. They must match `signal_cross_section`, `ground_cross_section` and `Z0` in `six_port_gen.py`.
 - The Palace process stackup comes from the PDK (`$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/`, or `workflow/` in PDKs that pin a gds2palace from before 2026-09-26) and is not vendored here. The drivers look in both folders. `verification/em/stackups/README.md` describes the options.
+- The EM drivers use gds2palace's surface metal model (no `filled_metals`, no `External` on the `Conductivity` boundaries). `verification/em/metal_model/README.md` records why and what it costs in accuracy. Read it before changing either setting.
 - snp2le fits the raw EM results (`sparx<FREQ>_<block>.sNp`, not `*_deembedded.sNp`), the full core in `sparx-core` with `LE_NOISE=thermal` (the core's thermal noise). The fit orders in use are in the `all` and `sparx-core` targets (BPF 13, WPD 10, BLC 6, core 24). The models only need to be passive inside the fitted 80 to 240 GHz band: the WPD fit reaches σ_max 1.618 at 679 GHz, and that is accepted.
 - Testbench names end in `_ngspice` or `_vacask`, which selects the netlist format and the simulator in `sim-xschem`. VACASK runs with `-sp`, so `sim-xschem` calls the postprocess scripts itself by name pattern: a new kind of `_vacask` testbench needs its line there.
 - Power-detector variants (`VARIANT=m16`, `VARIANT=m1_pex`) are rewritten from the emitted netlist by `scripts/powdet_variant.py` and run in `testbenches/xschem/simulations/<VARIANT>/`.

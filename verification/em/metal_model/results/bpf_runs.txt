@@ -1,0 +1,19 @@
+run                          f   S11 dB   S21 dB   S31 dB   S23 dB     D1 %     D2 %     D3 %
+F_bpf_ext                160.0   -6.016   -9.685      nan      nan   64.219   64.315      nan
+F_bpf_s2                 160.0   -6.123  -10.008      nan      nan   65.602   65.699      nan
+F_bpf_sig119             160.0   -6.282   -9.294      nan      nan   64.694   64.796      nan
+G_bpf_ext_tm2x1073_band  150.4   -3.739  -12.087      nan      nan   51.543   51.618      nan
+G_bpf_ext_tm2x1073_band  155.2   -5.601  -10.065      nan      nan   62.616   62.715      nan
+G_bpf_ext_tm2x1073_band  160.0   -6.067   -9.493      nan      nan   64.029   64.126      nan
+G_bpf_ext_tm2x1073_band  164.8   -5.063  -10.275      nan      nan   59.448   59.512      nan
+G_bpf_ext_tm2x1073_band  169.6   -7.181  -10.558      nan      nan   72.067   72.136      nan
+G_bpf_s2_band            150.4   -3.824  -12.749      nan      nan   53.237   53.313      nan
+G_bpf_s2_band            155.2   -5.478  -10.709      nan      nan   63.180   63.277      nan
+G_bpf_s2_band            160.0   -6.123  -10.008      nan      nan   65.602   65.699      nan
+G_bpf_s2_band            164.8   -5.141  -10.746      nan      nan   60.964   61.030      nan
+G_bpf_s2_band            169.6   -7.059  -11.086      nan      nan   72.530   72.600      nan
+G_bpf_sig119_band        150.4   -3.753  -12.142      nan      nan   51.756   51.833      nan
+G_bpf_sig119_band        155.2   -5.264  -10.162      nan      nan   60.608   60.703      nan
+G_bpf_sig119_band        160.0   -6.282   -9.294      nan      nan   64.695   64.796      nan
+G_bpf_sig119_band        164.8   -4.909  -10.146      nan      nan   58.040   58.106      nan
+G_bpf_sig119_band        169.6   -7.129  -10.248      nan      nan   71.184   71.252      nan

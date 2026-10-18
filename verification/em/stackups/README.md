@@ -62,6 +62,8 @@ python3 verification/em/scripts/palace_sim.py <gds> --stackup SG13G2_200um.xml
 python3 verification/em/scripts/palace_sim.py <gds> --stackup /path/to/my_stackup.xml
 ```
 
+The stackup sets the materials, not how the solver treats the metals. Whether a metal is a surface impedance or a conducting volume, and what that costs in accuracy for SPARX, is in [`../metal_model/README.md`](../metal_model/README.md).
+
 ## The production stackups
 
 Two families, plus a PCB file that is not an IC at all.

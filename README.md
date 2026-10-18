@@ -258,6 +258,7 @@ An overview of the open-source design flow for SPARX is shown below. The flow co
 │  │  └─ 📁 sparx_powdet_sbd.magic.drc/
 │  ├─ 📁 em/
 │  │  ├─ 📁 layout/
+│  │  ├─ 📁 metal_model/
 │  │  ├─ 📁 palace_model/
 │  │  ├─ 📁 s-parameter/
 │  │  ├─ 📁 scripts/
@@ -674,6 +675,8 @@ The following parameters are shared by all EM simulation targets:
 `FREQ` is the only one that `build-layout` also takes as an argument. The other three are the port settings that the targets pass to `palace_sim.py`; they are not derived from the layout, so they must match `signal_cross_section`, `ground_cross_section`, and `Z0` in `scripts/six_port_gen.py`. Everything else about the structures (substrate permittivity, filter type, order, bandwidth, ripple, divider shape) is hardcoded in `scripts/six_port_gen.py`: change it there, rerun `build-layout`, and rerun the EM target.
 
 The process stackup that turns the GDS into a 3D model (materials, dielectric stack, GDS layer to z-range map) comes from the PDK, at `$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/` (`workflow/` in PDKs that pin a gds2palace from before 2026-09-26, and the drivers look in both). It is not vendored here. The `gds2palace` package that reads it is a separate pip install in IIC-OSIC-TOOLS with its own version, so both drivers print the stackup path, the PDK commit and the `gds2palace` version at startup. Both simulation targets default to `SG13G2_nosub.xml`, because the solid Metal5 plane under the TopMetal2 traces shields the silicon, so leaving the substrate out of the model costs almost nothing in accuracy and saves a lot of mesh. Pass `--stackup <name-or-path>` to use a different one. `verification/em/stackups/` holds the [documentation](verification/em/stackups/README.md): what each stackup is, where to find it, the XML format including the schemaVersion 3.0 and 3.1 additions, and how to check the reader version before using a 3.x file.
+
+All EM simulations model the metals with gds2palace's surface model (a surface impedance on every face of a hollow metal shell), not as conducting volumes. [`verification/em/metal_model/`](verification/em/metal_model/README.md) explains the difference between the two models, documents the check against volume physics that this choice rests on (the WPD within 1 %, the BPF about 0.5 dB pessimistic), and lists when a future revision should switch to volume metal.
 
 **Branch-Line Coupler (BLC):**
 
