@@ -37,10 +37,11 @@ When adding a flow or a folder, mirror the template layout and its `Makefile` co
 - Variables are set with `?=` and overridden on the command line, for example `FREQ=<GHz>`, `CELL=<cell>`, `TB=<testbench>`, `VARIANT=<m16|m1_pex>`, `NP=<procs>`.
 - There is no RTL and no cocotb testbench in this repo.
 - Each folder with schematics has its own `xschemrc`, and the targets pass it with `--rcfile`. See "Xschem Configuration" in `README.md`.
+- `doc/fig/targets_overview/targets_overview.drawio` draws the call tree of `make all` ("Makefile Structure" in `README.md`, `@fig-targets` in the documentation). After a change to `all`, `build-top`, the verify targets, `sparx-core` or `sim-all`, update the drawio and re-export the PNG, SVG and PDF together. The PDF render of the documentation uses the PDF next to the SVG, so a stale PDF ships even when the SVG is current.
 
 ## Build, simulate, verify
 
-Run from the repo root. These are the narrow targets for checking a change. `make all` runs the Palace EM solves, and `make sparx-core` (seven-port EM) is long enough that it is not part of `all`.
+Run from the repo root. These are the narrow targets for checking a change. `make all` runs the Palace EM solves of the three blocks. `make sparx-core` (seven-port EM) is long enough that `all` runs it only with `WITH_CORE=1` (default `0`).
 
 ```sh
 make help                                        # targets of the Makefile
@@ -64,7 +65,7 @@ make regression                                  # tool/flow smoke test, reuses 
 
 ## Design conventions
 
-- `scripts/six_port_gen.py` holds every structure parameter (filter, divider shape `wpd_shape`, substrate permittivity). Change it there, rerun `build-layout`, then rerun the EM target. The EM targets solve the structures `build-layout` wrote to `verification/em/layout/`, so layout and EM stay consistent.
+- `scripts/six_port_gen.py` holds every structure parameter (filter, divider shape `wpd_shape`, substrate permittivity). Change it there, rerun `build-layout`, then rerun the EM target. The EM targets solve the structures `build-layout` wrote to `verification/em/layout/`, so layout and EM stay consistent. The `sparx_core_le_tb_acsp_*` and `sparx_top_le_tb_*` benches read the committed full-core fit, which only `make sparx-core` or `make all WITH_CORE=1` regenerates.
 - EM file names encode only the frequency (`sparx<FREQ>_blc`, `_wpd`, `_bpf`, `_core`). `BLC_EM_NAME` and the other `*_EM_NAME` variables in the `Makefile` must stay in sync with the `write_em_gds()` calls in `six_port_gen.py`.
 - The EM port settings `SIGNAL_CROSS_SECTION`, `GROUND_CROSS_SECTION` and `Z0` are passed to `palace_sim.py`, not read from the layout. They must match `signal_cross_section`, `ground_cross_section` and `Z0` in `six_port_gen.py`.
 - The Palace process stackup comes from the PDK (`$PDK_ROOT/$PDK/libs.tech/palace/XML_stackup/legacy/`, or `workflow/` in PDKs that pin a gds2palace from before 2026-09-26) and is not vendored here. The drivers look in both folders. `verification/em/stackups/README.md` describes the options.

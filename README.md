@@ -337,6 +337,40 @@ Both `simulations/` folders are generated and git-ignored.
 - `make open` starts Xschem in the file's own directory, so the same rule applies to every button of the file browser, see [Open the Design Files](#open-the-design-files).
 
 
+## Makefile Structure
+
+The whole flow is driven by the single top-level `Makefile`, and [Makefile Targets](#makefile-targets) below documents each target. The figure below shows how the targets are connected when you run `make all`.
+
+<p align="center">
+  <a href="doc/fig/targets_overview/targets_overview.png">
+    <img src="doc/fig/targets_overview/targets_overview.png" alt="Overview of the Makefile targets" width=100%>
+  </a>
+  <br>
+  <em>Overview of the Makefile targets.</em>
+</p>
+
+Every coloured branch is one stage of the flow, and its header names the folders the stage writes to. The numbers in the headers give the execution order of `make all`, and inside a branch the targets run from top to bottom.
+
+All targets live in the one `Makefile`, so every arrow is a direct `$(MAKE) <target>` call. The boxes directly below a header are called by `make all` itself, and an indented box is called by the nearest box above it with less indent. A box with a thicker border calls the boxes indented below it. The second line of a box shows the parameters of the call, where `*` stands for any part of a testbench name. A box marked ×N stands for N calls of the same target, for example one SPICE and one Spectre fit per `snp2le` box, and a box that names two targets calls each of them once. The dashed boxes with a `WITH_CORE=1` tag run only with `make all WITH_CORE=1`, see below. The figure leaves out the helper steps. `copy-sparam` copies the Touchstone files of each EM run to `verification/em/s-parameter/`, `klayout-lvs` and `magic-lvs` first export the schematic netlist with `klayout-lvs-netlist` and `magic-lvs-netlist`, and `klayout-pex` and `magic-pex` first regenerate the PEX symbol with `symbol-pex`.
+
+At the top level, `make all` runs five stages in this order:
+
+1. **Layout**: `build-top` installs the GDSFactory PDK add-on (`build-pdk`), generates the 160 GHz layout together with the EM structures in `verification/em/layout/` (`build-layout`), and renders the top-level GDS (`render-gds`).
+2. **Verification**: `klayout-verify` and `magic-verify` run DRC, LVS and PEX of the SBD power detector `sparx_powdet_sbd` with both flows. Then `klayout-drc` (`DRC_LEVEL=macro`) and `magic-drc` check the top cell `sparx160_top`. The figure already shows the LVS of the top cell (`klayout-lvs`, `magic-lvs`), which `make all` does not run yet: it follows once top-level LVS works, see [`ToDo.md`](ToDo.md).
+3. **EM simulation**: AWS Palace solves the BPF, WPD and BLC (`sim-bpf-em`, `sim-wpd-em`, `sim-blc-em`), and `copy-sparam` copies the raw and de-embedded Touchstone files of each run to `verification/em/s-parameter/`.
+4. **LE models**: `snp2le` fits the raw Touchstone file of each block to a SPICE and a Spectre lumped element netlist, with the fit orders 13 (BPF), 10 (WPD) and 6 (BLC).
+5. **Circuit simulation**: `sim-all` runs 21 of the 24 testbenches, all except the three transients of the passive LE models. With the power-detector design variants (`sim-powdet-variants`) and the post-layout runs of the receiver benches, these are 27 simulations.
+
+The simulations run last, so the block benches and the composed-core benches use the LE models that the same invocation has just fitted.
+
+The dashed boxes are the full six-port core: its EM solve (`sim-sparx-core-em`) and its fit with `ORDER=24` and the core's thermal noise (`LE_NOISE=thermal`). `make all` runs them only with `WITH_CORE=1`, because the seven-port EM solve takes about 20 times the core-hours of the three blocks, and the committed run needed 119 GB of memory on 128 MPI ranks. It runs them through `make sparx-core` as one step after the block fits. That step also copies the core's Touchstone files and runs the two `sparx_core_tb_acsp_*` benches, which `sim-all` then repeats. With the default `WITH_CORE=0`, `make all` simulates the committed full-core fit, `netlist/spice/sparx_core_le.spice` and `netlist/spectre/sparx_core_le.inc`, in the `sparx_core_le_tb_acsp_*` and `sparx_top_le_tb_*` benches.
+
+> [!IMPORTANT]
+> After a change to a structure parameter in `scripts/six_port_gen.py`, run `make sparx-core` or `make all WITH_CORE=1`. Otherwise the full-core benches (`sparx_core_le_tb_acsp_*`, `sparx_top_le_tb_*`) keep simulating the core fit of the old layout, and nothing warns about it.
+
+`make regression` runs a short subset of these stages as a tool and flow smoke test, see [Regression](#regression).
+
+
 ## Makefile Targets
 
 ### Show Available Targets
@@ -716,7 +750,7 @@ make build-layout FREQ=77 && make sim-sparx-core-em FREQ=77
 ```
 
 > [!NOTE]
-> The seven-port full-core EM simulation has a very long runtime. It is therefore not part of `make all`. See the `sparx-core` target below for the complete core EM flow.
+> The seven-port full-core EM simulation has a very long runtime, so `make all` runs it only with `WITH_CORE=1`. See the `sparx-core` target below for the complete core EM flow.
 
 ### View EM Simulation Results
 
@@ -767,7 +801,7 @@ make snp2le SNP=verification/em/s-parameter/sparx160_core.s7p ORDER=24 LE_FORMAT
 
 Runs the complete six-port core EM flow in one target: EM simulation of the core (`sim-sparx-core-em`), copying of the raw and de-embedded S-parameters (`copy-sparam`), lumped element fitting with snp2le (`ORDER=24` with the core's thermal noise, `LE_NOISE=thermal`, in both SPICE and Spectre dialects), and AC S-parameter simulation of the six-port core testbenches (`sparx_core_tb_acsp_ngspice` and `sparx_core_tb_acsp_vacask`).
 
-This target is intentionally not part of `make all` because the seven-port full-core EM simulation has a very long runtime. It starts from `verification/em/layout/sparx<FREQ>_core.gds`, so run `build-layout` for the target frequency first (the 160 GHz core is committed to the repository).
+`make all` runs this target only with `WITH_CORE=1` (default `0`), because the seven-port full-core EM simulation has a very long runtime. Run it, or `make all WITH_CORE=1`, after every change to a structure parameter in `scripts/six_port_gen.py`, since the `sparx_core_le_tb_acsp_*` and `sparx_top_le_tb_*` benches of `sim-all` simulate its committed fit. It starts from `verification/em/layout/sparx<FREQ>_core.gds`, so run `build-layout` for the target frequency first (the 160 GHz core is committed to the repository).
 
 ```sh
 make sparx-core
@@ -846,21 +880,15 @@ The following testbenches are simulated:
 
 ### Build, Simulate, and Verify All
 
-Runs the complete design flow end to end:
-
-1. `build-top` builds the PDK, generates the six-port layout, and renders the top-level GDS.
-2. Verification of the SBD-based power detector cell with both flows, KLayout DRC, LVS, and PEX as well as Magic DRC, Magic + Netgen LVS, and Magic PEX, followed by KLayout DRC and Magic DRC of the top-level six-port.
-3. EM simulation of the passive RF structures with AWS Palace (`sim-bpf-em`, `sim-wpd-em`, `sim-blc-em`).
-4. Copying of the raw and de-embedded EM S-parameter results to `verification/em/s-parameter/` (`copy-sparam` for BPF, WPD, and BLC).
-5. Raw S-parameter to lumped element netlist conversion with snp2le, in both SPICE and Spectre netlists, for the BPF, WPD, and BLC.
-6. All Xschem testbench simulations (`sim-all`).
+Runs the complete design flow end to end, in the five stages described in [Makefile Structure](#makefile-structure): the layout (`build-top`), the verification of the power detector and the DRC of the top cell, the EM simulation of the BPF, WPD and BLC with the copy of their S-parameters, the LE models fitted with snp2le, and the circuit simulation of all Xschem testbenches (`sim-all`). `WITH_CORE=1` adds the six-port core EM flow (`sparx-core`, the dashed boxes in the figure) before `sim-all`. The default `WITH_CORE=0` reuses the committed full-core fit.
 
 ```sh
 make all
+make all WITH_CORE=1
 ```
 
 > [!NOTE]
-> This target runs the full-wave EM simulations and therefore has a long runtime. The snp2le conversions read the raw Touchstone files in `verification/em/s-parameter/`, which are copied there from the Palace output by `copy-sparam`.
+> This target runs the full-wave EM simulations and therefore has a long runtime. `WITH_CORE=1` adds the seven-port core solve, about 20 times the EM cost of the three blocks. The snp2le conversions read the raw Touchstone files in `verification/em/s-parameter/`, which are copied there from the Palace output by `copy-sparam`.
 
 ### Release
 
