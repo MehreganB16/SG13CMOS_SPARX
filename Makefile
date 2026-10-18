@@ -151,7 +151,7 @@ PALACE_SCRIPTS_DIR 	:= $(PDK_ROOT)/$(PDK)/libs.tech/palace/scripts
 
 # Help Target
 help: ## Show this help message
-	@echo 'Usage: make <target> [CELL=<cellname>] [EXT_MODE=<1|2|3>] [THRESHOLD=<mOhm>] [MINRES=<mOhm>] [MINDELAY=<ps>] [DRC_LEVEL=<precheck|macro|regular>] [PEX_MERGED_PINS="<pin> ..."] [EV_PRECISION=<digits>] [FREQ=<GHz>] [START_FREQ=<GHz>] [STOP_FREQ=<GHz>] [STEP_FREQ=<GHz>] [NO_FILL=0|1] [NO_FILL_M5=0|1] [TB=<testbenchname>] [SCRIPT=<scriptname>] [VERSION=<version>] [OPEN_ARGS=<options>]'
+	@echo 'Usage: make <target> [CELL=<cellname>] [EXT_MODE=<1|2|3>] [THRESHOLD=<mOhm>] [MINRES=<mOhm>] [MINDELAY=<ps>] [DRC_LEVEL=<precheck|macro|regular>] [PEX_MERGED_PINS="<pin> ..."] [EV_PRECISION=<digits>] [FREQ=<GHz>] [START_FREQ=<GHz>] [STOP_FREQ=<GHz>] [STEP_FREQ=<GHz>] [NO_FILL=0|1] [NO_FILL_M5=0|1] [TB=<testbenchname>] [SCRIPT=<scriptname>] [WITH_CORE=0|1] [VERSION=<version>] [OPEN_ARGS=<options>]'
 	@echo ''
 	@echo 'Available targets:'
 	@grep -E '^[a-zA-Z0-9_.-]+:.*## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-20s %s\n", $$1, $$2}'
@@ -175,6 +175,7 @@ help: ## Show this help message
 	@echo 'EM sim: NP=<procs> Z0=<Ohms> SIGNAL_CROSS_SECTION=<metal> GROUND_CROSS_SECTION=<metal> are the port settings of the solve.'
 	@echo 'view-em-sim: FILE_NAME=<name_with_extension>. copy-sparam: SPARAM=<em_run_name>. release: VERSION=<version>.'
 	@echo 'regression is the fast tool/flow smoke test (committed EM result). regression-nightly also runs the WPD AWS Palace EM solve.'
+	@echo 'WITH_CORE defaults to 0. Set to 1 to run sparx-core (seven-port core EM, long runtime) inside all, before sim-all.'
 	@echo 'VERSION defaults to $(VERSION). Used by the release target.'
 	@echo 'OPEN_ARGS passes extra options to sak-open.py for the open target (e.g. --all).'
 	@echo 'REQUIRED_PDK defaults to $(REQUIRED_PDK). Every target except help and clean aborts if $$PDK differs.'
@@ -552,7 +553,13 @@ sparx-core: ## Run the six-port core EM flow: EM simulation, S-parameter copy, L
 # ================================================================================================
 
 
-all: ## Build, verify, EM-simulate, extract LE models, and run all testbenches (usage: make all)
+# WITH_CORE toggles the six-port core EM flow (sparx-core) inside `all`:
+# - 0 (default) reuses the committed full-core fit
+# - 1 runs sparx-core before sim-all, so the sparx_core_le and sparx_top_le testbenches simulate a fresh fit.
+# The seven-port EM solve costs about 20 times the EM of the three blocks.
+WITH_CORE ?= 0
+
+all: ## Build, verify, EM-simulate, extract LE models, and run all testbenches (usage: make all [WITH_CORE=0|1])
 	$(MAKE) build-top
 # 	Verification
 	$(MAKE) klayout-verify CELL=$(POWDET)
@@ -576,6 +583,8 @@ all: ## Build, verify, EM-simulate, extract LE models, and run all testbenches (
 	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(WPD_EM_NAME).s3p ORDER=10 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_wpd_le.inc
 	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME).s4p ORDER=6 LE_FORMAT=spice LE_OUT=netlist/spice/sparx_blc_le.spice
 	$(MAKE) snp2le SNP=$(EM_SPARAM_DIR)/$(BLC_EM_NAME).s4p ORDER=6 LE_FORMAT=spectre LE_OUT=netlist/spectre/sparx_blc_le.inc
+# 	Optional six-port core EM flow, run only when WITH_CORE=1.
+	$(if $(filter 1,$(WITH_CORE)),$(MAKE) sparx-core)
 # 	Xschem testbench simulations
 	$(MAKE) sim-all
 .PHONY: all

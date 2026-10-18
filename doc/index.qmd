@@ -170,7 +170,7 @@ make regression                                 # tool and flow smoke test
 make all                                        # the complete flow
 ```
 
-`make all` runs the Palace EM solves of the three blocks (@sec-em-cost) and 21 of the 24 testbenches, all except the three passive-model transients, several hours in total. The seven-port EM solve of the full core takes about 20 times the core-hours of the three blocks and runs only with `make sparx-core`. `make help` lists every target, and the repository [README](https://github.com/iic-jku/SG13CMOS_SPARX#makefile-targets) documents each of them with its parameters.
+`make all` runs the Palace EM solves of the three blocks (@sec-em-cost) and 21 of the 24 testbenches, all except the three passive-model transients, several hours in total. The seven-port EM solve of the full core takes about 20 times the core-hours of the three blocks and runs only with `make sparx-core` or `make all WITH_CORE=1`. `make help` lists every target, and the repository [README](https://github.com/iic-jku/SG13CMOS_SPARX#makefile-targets) documents each of them with its parameters.
 
 ::: {.callout-warning}
 Most build outputs are committed: layouts, netlists, Palace results, Touchstone files, DRC and LVS reports, renders and simulation data. The targets overwrite them, and `make clean` deletes them, `layout/` included. Check `git status` after a run and `git restore` what you did not mean to change. `make release` defaults to `VERSION=2.0.0` and overwrites the committed release, so always pass a new `VERSION`.
@@ -217,10 +217,14 @@ Nothing in the flow is specific to a six-port. The structure parameters live in 
 | LE models | snp2le | `snp2le` | `netlist/spice/`, `netlist/spectre/` |
 | Circuit simulation | Xschem, ngspice, VACASK | `sim-xschem`, `sim-all`, `sim-powdet-variants` | `plot_simulations/` in `testbenches/xschem/` |
 | Full-core EM flow | AWS Palace, snp2le, ngspice, VACASK | `sparx-core` | core EM, both fits, two benches |
-| Everything | all of the above except the full-core EM | `all` | |
+| Everything | all of the above, the full-core EM flow only with `WITH_CORE=1` | `all` | |
 | Smoke test | a subset of the above | `regression`, `regression-nightly` | |
 
 : Flow steps and their Makefile targets. {#tbl-flow tbl-colwidths="[18,22,32,28]"}
+
+![Makefile targets that `make all` runs in five stages. Each header names the folders its stage writes to, and the targets of a stage run from top to bottom. An indented target is called by the nearest target above it with less indent, a box marked ×N stands for N calls of the same target, and the second line of a box shows the parameters of the call. The dashed boxes run only with `WITH_CORE=1`, and the LVS of the top cell is not part of `make all` yet.](fig/targets_overview/targets_overview.svg){#fig-targets .column-page width=100%}
+
+@fig-targets shows how the targets of @tbl-flow are chained. All of them live in the one top-level `Makefile`, and every arrow is a direct `$(MAKE)` call. `make all` runs the stages from left to right, so the testbenches simulate the LE models that the same run has just fitted. The two dashed boxes are the EM solve and the fit of the full core. `make all` runs them only with `WITH_CORE=1`, through `make sparx-core` after the block fits. That step also runs the two `sparx_core_tb_acsp_*` benches, which `sim-all` repeats. With the default `WITH_CORE=0`, `make all` simulates the committed full-core fit in the `sparx_core_le_tb_acsp_*` and `sparx_top_le_tb_*` benches. After a change to a structure parameter in `scripts/six_port_gen.py`, run `make sparx-core` or `make all WITH_CORE=1`, or those benches keep showing the core of the old layout. The LVS box of the top cell is drawn ahead of the flow: `make all` runs it once top-level LVS works (@sec-issues). The figure leaves out the helper steps: `copy-sparam` after the EM runs, the schematic netlist export inside `klayout-lvs` and `magic-lvs`, and the `symbol-pex` call inside the two PEX targets.
 
 # Programmatic Layout Generation {#sec-layout}
 
