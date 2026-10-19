@@ -7,7 +7,8 @@
 MAKEFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Variables
-TOP = sparx160_top
+# Top cell of the design frequency FREQ. Keep `=`: FREQ is set further down.
+TOP = sparx$(FREQ)_top
 POWDET = sparx_powdet_sbd
 
 .DEFAULT_GOAL := help
@@ -156,13 +157,13 @@ help: ## Show this help message
 	@echo 'Available targets:'
 	@grep -E '^[a-zA-Z0-9_.-]+:.*## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-20s %s\n", $$1, $$2}'
 	@echo ''
-	@echo 'CELL defaults to $(TOP). Override to verify subcells.'
+	@echo 'CELL defaults to $(TOP), the top cell of FREQ. Override to verify subcells.'
 	@echo 'EXT_MODE defaults to 3 (full-RC). 1=C-decoupled, 2=C-coupled.'
 	@echo 'The extracted netlists carry the mode as suffix: netlist/pex/<CELL>_magic_pex_<EXT_MODE>.spice and <CELL>_klayout_pex_<EXT_MODE>.spice.'
 	@echo 'THRESHOLD/MINRES/MINDELAY are full-RC (EXT_MODE=3) extresist settings for magic-pex (defaults 1000 mOhm / 100 mOhm / 0 ps, gating by resistance, the Magic defaults are 10000 / 1000 / 1).'
 	@echo 'DRC_LEVEL defaults to macro. Sets the KLayout DRC level for klayout-drc (precheck|macro|regular).'
 	@echo 'PEX_MERGED_PINS is empty by default. Lists the supply pins that the flat extraction merges, they are dropped from the generated PEX symbol.'
-	@echo 'FREQ defaults to 160 (GHz). Override for build-layout.'
+	@echo 'FREQ defaults to 160 (GHz). Selects the layout, its top cell (TOP) and the EM structures.'
 	@echo 'NO_FILL defaults to 0 (fill enabled). Set to 1 to disable metal fill.'
 	@echo 'NO_FILL_M5 defaults to 0 (M5 fill enabled). Set to 1 to disable M5 ground fill.'
 	@echo 'START_FREQ, STOP_FREQ, STEP_FREQ default to 60, 300, and 20 (GHz) for build-layout-sweep.'
@@ -235,7 +236,7 @@ render-gds: ## Render images from the GDS of the TOP cell using sak-render.py (u
 
 
 # DRC Targets
-klayout-drc-regular: ## Run regular DRC of the TOP cell (usage: make klayout-drc-regular)
+klayout-drc-regular: ## Run regular DRC of the TOP cell (usage: make klayout-drc-regular [FREQ=<GHz>])
 	mkdir -p $(DRC_RPT_DIR)
 	sak-drc.sh -d -k -l regular -w $(DRC_RPT_DIR) $(LAY_DIR)/$(TOP).gds
 .PHONY: klayout-drc-regular
@@ -592,7 +593,7 @@ all: ## Build, verify, EM-simulate, extract LE models, and run all testbenches (
 
 
 # Release Target
-release: ## Copy the gds, netlist files and chip renders to the release folder (usage: make release VERSION=<version>)
+release: ## Copy the gds, netlist files and chip renders to the release folder (usage: make release VERSION=<version> [FREQ=<GHz>])
 	mkdir -p $(RELEASE_DIR)/v.$(VERSION)/gds
 	mkdir -p $(RELEASE_DIR)/v.$(VERSION)/netlist
 	mkdir -p $(RELEASE_DIR)/v.$(VERSION)/img
