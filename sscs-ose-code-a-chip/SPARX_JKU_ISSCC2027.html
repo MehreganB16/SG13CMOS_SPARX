@@ -13993,7 +13993,7 @@ Wrote /tmp/sparx/testbenches/xschem/plot_simulations/data/sparx_powdet_sbd_tn.cs
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p><strong>Transient Noise Result:</strong></p>
-<p>Double-sideband noise figure of one run of this notebook, with the HBAC conversion of the noise-figure simulation in the denominator:</p>
+<p>Double-sideband noise figure of one run of this notebook on VACASK <code>fb8cc20</code>, with the HBAC conversion of the noise-figure simulation in the denominator:</p>
 <table>
 <thead>
 <tr>
@@ -14014,28 +14014,28 @@ Wrote /tmp/sparx/testbenches/xschem/plot_simulations/data/sparx_powdet_sbd_tn.cs
 </tr>
 <tr>
 <td>1 GHz</td>
-<td>45.4 dB</td>
+<td>45.6 dB</td>
 <td>44.7 dB</td>
 <td>44.8 dB</td>
 <td>42.1 dB</td>
 </tr>
 <tr>
 <td>2 GHz</td>
-<td>43.0 dB</td>
+<td>43.6 dB</td>
 <td>42.2 dB</td>
 <td>42.3 dB</td>
 <td>40.0 dB</td>
 </tr>
 <tr>
 <td>3 GHz</td>
-<td>41.3 dB</td>
+<td>41.9 dB</td>
 <td>41.1 dB</td>
 <td>41.1 dB</td>
 <td>39.2 dB</td>
 </tr>
 </tbody>
 </table>
-<p>The three runs collapse onto one curve within 2 % when normalized by their noise amplitude, so the transient is in its linear regime. It lies within 0.9 dB of HBNOISE and 2.0 dB to 3.4 dB above the small-signal noise at the dc operating point, with the same frequency dependence. PNOISE around the shooting PSS sits within 0.1 dB of HBNOISE, so the offset of the transient belongs to the transient estimate and not to the periodic analyses. Transient noise is a random process, and a noise figure from a 100 ns record is good to about 1 dB: <a href="https://github.com/iic-jku/SG13CMOS_SPARX/blob/next_release/testbenches/xschem/README.md#34-transient-noise-the-independent-check-of-hbnoise">section 3.4 of the testbench README</a> lists three noise seeds. The reference result of the repository:</p>
+<p>The three runs collapse onto one curve within 5 % when normalized by their noise amplitude, so the transient is in its linear regime. It lies within 1.4 dB of HBNOISE and 2.2 dB to 3.6 dB above the small-signal noise at the dc operating point, with the same frequency dependence. PNOISE around the shooting PSS sits within 0.1 dB of HBNOISE, so the offset of the transient belongs to the transient estimate and not to the periodic analyses. Transient noise is a random process, and a noise figure from a 100 ns record is good to about 1 dB: <a href="https://github.com/iic-jku/SG13CMOS_SPARX/blob/next_release/testbenches/xschem/README.md#34-transient-noise-the-independent-check-of-hbnoise">section 3.4 of the testbench README</a> lists three noise seeds. The same seed draws another realization on <code>fb8cc20</code> than on VACASK <code>1b48553</code>, on which the result of the repository was produced: 45.4 dB, 43.0 dB, and 41.3 dB at 1 GHz, 2 GHz, and 3 GHz, while HBNOISE, PNOISE, and the small-signal noise are the same on both builds. The reference result of the repository:</p>
 <p><img alt="Noise figure from the four noise estimates (transient noise, small-signal noise at the dc operating point, HBNOISE, and PNOISE), reference result of the SPARX repository" src="https://raw.githubusercontent.com/iic-jku/SG13CMOS_SPARX/next_release/testbenches/xschem/plot_simulations/figures/sparx_powdet_sbd_nf_compare.png"/></p>
 <p>The repository runs the same comparison against the LO drive at a 2 GHz IF, with a transient-noise ladder at nine LO levels (<code>sparx_powdet_sbd_tb_tn_lo_vacask</code>, about 24 minutes, not part of this notebook). PNOISE stays within 0.1 dB of HBNOISE over the whole LO sweep, and the transient lies 0.6 dB to 1.1 dB above them and follows their rise past compression. The small-signal noise at the dc operating point leaves the three above about -16 dBm and keeps falling, so it is 8.4 dB optimistic at +6.9 dBm, see <a href="https://github.com/iic-jku/SG13CMOS_SPARX/blob/next_release/testbenches/xschem/README.md#35-noise-figure-against-lo-drive-from-four-noise-estimates">section 3.5 of the testbench README</a>:</p>
 <p><img alt="Noise figure against the LO drive from the four noise estimates, reference result of the SPARX repository" src="https://raw.githubusercontent.com/iic-jku/SG13CMOS_SPARX/next_release/testbenches/xschem/plot_simulations/figures/sparx_powdet_sbd_nf_lo_compare.png"/></p>
