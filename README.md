@@ -351,12 +351,12 @@ The whole flow is driven by the single top-level `Makefile`, and [Makefile Targe
 
 Every coloured branch is one stage of the flow, and its header names the folders the stage writes to. The numbers in the headers give the execution order of `make all`, and inside a branch the targets run from top to bottom.
 
-All targets live in the one `Makefile`, so every arrow is a direct `$(MAKE) <target>` call. The boxes directly below a header are called by `make all` itself, and an indented box is called by the nearest box above it with less indent. A box with a thicker border calls the boxes indented below it. The second line of a box shows the parameters of the call, where `*` stands for any part of a testbench name. A box marked ×N stands for N calls of the same target, for example one SPICE and one Spectre fit per `snp2le` box, and a box that names two targets calls each of them once. The dashed boxes with a `WITH_CORE=1` tag run only with `make all WITH_CORE=1`, see below. The figure leaves out the helper steps. `copy-sparam` copies the Touchstone files of each EM run to `verification/em/s-parameter/`, `klayout-lvs` and `magic-lvs` first export the schematic netlist with `klayout-lvs-netlist` and `magic-lvs-netlist`, and `klayout-pex` and `magic-pex` first regenerate the PEX symbol with `symbol-pex`.
+All targets live in the one `Makefile`, so every arrow is a direct `$(MAKE) <target>` call. The boxes directly below a header are called by `make all` itself, and an indented box is called by the nearest box above it with less indent. A box with a thicker border calls the boxes indented below it. The second line of a box shows the parameters of the call, where `*` stands for any part of a testbench name, and in `sparx*_top` for the design frequency. A box marked ×N stands for N calls of the same target, for example one SPICE and one Spectre fit per `snp2le` box, and a box that names two targets calls each of them once. The dashed boxes with a `WITH_CORE=1` tag run only with `make all WITH_CORE=1`, see below. The figure leaves out the helper steps. `copy-sparam` copies the Touchstone files of each EM run to `verification/em/s-parameter/`, `klayout-lvs` and `magic-lvs` first export the schematic netlist with `klayout-lvs-netlist` and `magic-lvs-netlist`, and `klayout-pex` and `magic-pex` first regenerate the PEX symbol with `symbol-pex`.
 
 At the top level, `make all` runs five stages in this order:
 
 1. **Layout**: `build-top` installs the GDSFactory PDK add-on (`build-pdk`), generates the 160 GHz layout together with the EM structures in `verification/em/layout/` (`build-layout`), and renders the top-level GDS (`render-gds`).
-2. **Verification**: `klayout-verify` and `magic-verify` run DRC, LVS and PEX of the SBD power detector `sparx_powdet_sbd` with both flows. Then `klayout-drc` (`DRC_LEVEL=macro`) and `magic-drc` check the top cell `sparx160_top`. The figure already shows the LVS of the top cell (`klayout-lvs`, `magic-lvs`), which `make all` does not run yet: it follows once top-level LVS works, see [`ToDo.md`](ToDo.md).
+2. **Verification**: `klayout-verify` and `magic-verify` run DRC, LVS and PEX of the SBD power detector `sparx_powdet_sbd` with both flows. Then `klayout-drc` (`DRC_LEVEL=macro`) and `magic-drc` check the top cell of the design frequency, `sparx160_top` by default and `sparx<FREQ>_top` with `FREQ=<GHz>`. The figure already shows the LVS of the top cell (`klayout-lvs`, `magic-lvs`), which `make all` does not run yet: it follows once top-level LVS works, see [`ToDo.md`](ToDo.md).
 3. **EM simulation**: AWS Palace solves the BPF, WPD and BLC (`sim-bpf-em`, `sim-wpd-em`, `sim-blc-em`), and `copy-sparam` copies the raw and de-embedded Touchstone files of each run to `verification/em/s-parameter/`.
 4. **LE models**: `snp2le` fits the raw Touchstone file of each block to a SPICE and a Spectre lumped element netlist, with the fit orders 13 (BPF), 10 (WPD) and 6 (BLC).
 5. **Circuit simulation**: `sim-all` runs 21 of the 24 testbenches, all except the three transients of the passive LE models. With the power-detector design variants (`sim-powdet-variants`) and the post-layout runs of the receiver benches, these are 27 simulations.
@@ -474,6 +474,8 @@ make build-layout-sweep START_FREQ=60 STOP_FREQ=300 STEP_FREQ=20 NO_FILL_M5=1
 
 Default sweep settings are `START_FREQ=60`, `STOP_FREQ=300`, and `STEP_FREQ=20` (all in GHz). `NO_FILL` and `NO_FILL_M5` are forwarded to each `build-layout` run.
 
+All thirteen layouts of the default sweep pass the KLayout DRC at `macro` level, and their EM simulations are clean as well. The repository commits the DRC reports, the EM results and the fitted models of 160 GHz only. Any other frequency reruns the same targets with `FREQ=<GHz>`, for example `make klayout-drc FREQ=80` and `make sim-bpf-em FREQ=80`.
+
 ### Build Top Cell
 
 Builds the top-level cell by running `build-pdk`, `build-layout`, and `render-gds`:
@@ -527,10 +529,11 @@ For the IHP Open-PDK, `sak-drc.sh` passes `--precheck_drc --no_density --no_offg
 make klayout-drc-regular
 ```
 
-**KLayout DRC** runs a KLayout DRC at the selected `DRC_LEVEL`:
+**KLayout DRC** runs a KLayout DRC at the selected `DRC_LEVEL`. `CELL` defaults to the top cell of the design frequency, `sparx<FREQ>_top`:
 
 ```sh
 make klayout-drc
+make klayout-drc FREQ=80
 make klayout-drc CELL=sparx_powdet_sbd
 make klayout-drc CELL=sparx_powdet_sbd DRC_LEVEL=regular
 ```
@@ -539,6 +542,7 @@ make klayout-drc CELL=sparx_powdet_sbd DRC_LEVEL=regular
 
 ```sh
 make magic-drc
+make magic-drc FREQ=80
 make magic-drc CELL=sparx_powdet_sbd
 ```
 
@@ -607,7 +611,7 @@ The generated symbol is a copy of `<CELL>.sym` with two changes: `type=subcircui
 
 `symbol-pex` runs automatically at the start of `klayout-pex` and `magic-pex`, so the symbol is rebuilt from the current `<CELL>.sym` before every extraction and cannot go stale when a pin is added, removed or renamed. Calling it by hand is only needed to refresh the symbol without re-running an extraction. Anything added to the generated file by hand is lost at the next extraction, so make the change in `<CELL>.sym` instead.
 
-If `<CELL>.sym` does not exist, the target prints a note and does nothing, which leaves the PEX targets running without a pin reorder just as before. That is the case for the default `CELL`, the generated six-port top cell `sparx160_top`, which has no hand-drawn symbol. It fails only when `<CELL>.sym` declares neither `type=subcircuit` nor `type=primitive`.
+If `<CELL>.sym` does not exist, the target prints a note and does nothing, which leaves the PEX targets running without a pin reorder just as before. That is the case for the default `CELL`, the generated six-port top cell `sparx<FREQ>_top`, which has no hand-drawn symbol. It fails only when `<CELL>.sym` declares neither `type=subcircuit` nor `type=primitive`.
 
 > [!NOTE]
 > Every symbol in this project also carries `spectre_format="@name ( @pinlist ) @symname"`. Xschem writes that line itself whenever a symbol is built from a schematic's pin list (key `a`, `make_sym.awk`), and it is read **only** by the Spectre netlister, which is also the one that drives VACASK (`xschem.tcl` configures `vacask "$N"` as the default simulator for `netlist_type spectre`). The SPICE netlister used for ngspice ignores it, so it has no effect on the ngspice testbenches.
