@@ -27,7 +27,7 @@ make sim-all                                         # every testbench, in the o
 
 **Netlists without Xschem.** `netlists/` holds the VACASK netlists of the five benches the Code-a-Chip notebook runs, `sparx_powdet_sbd_tb_pss_vacask`, `sparx_powdet_sbd_tb_nf_vacask`, `sparx_powdet_sbd_tb_tn_vacask`, `sparx_top_le_tb_rx_vacask` and `sparx_top_le_tb_nf_vacask`, each with its `.save` file, for environments without Xschem such as Google Colab. They are what the netlisting step of `sim-xschem` writes to `simulations/`, and their relative includes and post-processing paths assume they run there: copy them to `simulations/` and run `vacask -qp -sp <testbench>.spectre` in that folder, then the matching script from `plot_simulations/`. The post-layout receiver is not stored, it is produced the way `sim-xschem` does it, by `scripts/powdet_variant.py --variant m1_pex` into `simulations/m1_pex/`. After a change to one of these schematics, export the netlist again with `make sim-xschem TB=<testbench>` and copy it from `simulations/`.
 
-The notebook runs them on the VACASK `1b48553` build stored in `sscs-ose-code-a-chip/build/vacask/`, the commit the results in this folder were produced with, so all five are plain exports of their schematics. On an older binary the NF plot script still post-processes the NF deck and skips the shooting cross-check when the `pac` and `pnoise` rawfiles are missing.
+The notebook runs them on VACASK `fb8cc20`, which it downloads as an image layer of the IIC-OSIC-TOOLS `2026.10` image, so all five are plain exports of their schematics. On an older binary the NF plot script still post-processes the NF deck and skips the shooting cross-check when the `pac` and `pnoise` rawfiles are missing.
 
 Four ordering constraints matter:
 

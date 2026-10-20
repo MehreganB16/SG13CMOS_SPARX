@@ -147,7 +147,7 @@ The `2026.10` image ships VACASK `fb8cc20` and snp2le 0.1.17. The images up to `
 strings $(which vacask) | grep -c "PNOISE periodic"    # 0 on a build without pnoise
 ```
 
-The committed results were produced with a `1b48553` build, made inside the `2026.09` container as the [testbench README](https://github.com/iic-jku/SG13CMOS_SPARX/blob/main/testbenches/xschem/README.md#running-a-testbench) describes. The Code-a-Chip notebook carries a prebuilt binary of the same commit, see @sec-cac.
+The committed results were produced with a `1b48553` build, made inside the `2026.09` container as the [testbench README](https://github.com/iic-jku/SG13CMOS_SPARX/blob/main/testbenches/xschem/README.md#running-a-testbench) describes. The Code-a-Chip notebook runs the `fb8cc20` build of the `2026.10` image, see @sec-cac.
 
 The `Makefile` checks `$PDK` when it is parsed. Every target except `help` and `clean` aborts if it is not `ihp-sg13g2`, because a wrong PDK mixes technologies silently: DRC and LVS would run against the wrong rule deck, and an extraction under `ihp-sg13cmos5l` exits cleanly with Metal5, TopMetal2, the MIM capacitors and both diodes missing from the netlist.
 
@@ -790,7 +790,7 @@ The repository keeps [`KNOWN_ISSUES.md`](https://github.com/iic-jku/SG13CMOS_SPA
 
 # Code-a-Chip Notebook {#sec-cac}
 
-[`sscs-ose-code-a-chip/`](https://github.com/iic-jku/SG13CMOS_SPARX/tree/main/sscs-ose-code-a-chip) holds a Jupyter notebook for the IEEE SSCS Open-Source Ecosystem [Code-a-Chip](https://github.com/sscs-ose/sscs-ose-code-a-chip.github.io) Travel Grant Awards at ISSCC 2027, which runs in Google Colab. It installs the IHP Open-PDK and the GDSFactory add-on, generates the complete receiver from the design frequency, runs the KLayout DRC of the chip, converts the EM result of the core with snp2le, characterizes the detector and the post-layout receiver in VACASK, and simulates the receiver noise figure through the noisy core fit. It carries its own VACASK `1b48553` build in `sscs-ose-code-a-chip/build/vacask/`, because no tagged VACASK release had `pac` and `pnoise` as of October 2026. The five VACASK netlists it runs are plain exports of the repository's testbenches, stored in `testbenches/xschem/netlists/` for environments without Xschem. The notebook keeps its own copies of the GDS and assets and is not driven by the Makefile.
+[`sscs-ose-code-a-chip/`](https://github.com/iic-jku/SG13CMOS_SPARX/tree/main/sscs-ose-code-a-chip) holds a Jupyter notebook for the IEEE SSCS Open-Source Ecosystem [Code-a-Chip](https://github.com/sscs-ose/sscs-ose-code-a-chip.github.io) Travel Grant Awards at ISSCC 2027, which runs in Google Colab. It installs the IHP Open-PDK and the GDSFactory add-on, generates the complete receiver from the design frequency, runs the KLayout DRC of the chip, converts the EM result of the core with snp2le, characterizes the detector and the post-layout receiver in VACASK, and simulates the receiver noise figure through the noisy core fit. It downloads VACASK `fb8cc20` and OpenVAF-Reloaded as image layers of the IIC-OSIC-TOOLS `2026.10` image from Docker Hub, the first image with `pac` and `pnoise`, and applies the image's fixes of the PDK model converter before it generates the model libraries. The five VACASK netlists it runs are plain exports of the repository's testbenches, stored in `testbenches/xschem/netlists/` for environments without Xschem. The notebook keeps its own copies of the GDS and assets and is not driven by the Makefile.
 
 # Related Projects
 
